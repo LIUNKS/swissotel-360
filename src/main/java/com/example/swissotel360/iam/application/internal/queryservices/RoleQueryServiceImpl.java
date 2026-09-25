@@ -1,0 +1,33 @@
+package com.example.swissotel360.iam.application.internal.queryservices;
+
+import com.example.swissotel360.iam.application.queryservices.RoleQueryService;
+import com.example.swissotel360.iam.domain.model.entities.Role;
+import com.example.swissotel360.iam.domain.model.queries.GetAllRolesQuery;
+import com.example.swissotel360.iam.domain.model.queries.GetRoleByNameQuery;
+import com.example.swissotel360.iam.domain.repositories.RoleRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Application service that resolves IAM role read queries.
+ */
+@Service
+public class RoleQueryServiceImpl implements RoleQueryService {
+    private final RoleRepository roleRepository;
+
+    public RoleQueryServiceImpl(RoleRepository roleRepository) {
+        this.roleRepository = roleRepository;
+    }
+
+    @Override
+    public List<Role> handle(GetAllRolesQuery query) {
+        return roleRepository.findAll();
+    }
+
+    @Override
+    public Optional<Role> handle(GetRoleByNameQuery query) {
+        return roleRepository.findByName(query.name());
+    }
+}
