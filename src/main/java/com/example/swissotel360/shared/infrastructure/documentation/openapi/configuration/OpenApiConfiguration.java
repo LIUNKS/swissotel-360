@@ -20,17 +20,19 @@ import java.util.List;
  */
 @Configuration
 public class OpenApiConfiguration {
-    // Properties
-    @Value("${spring.application.name}")
-    String applicationName;
 
-    @Value("${documentation.application.description}")
-    String applicationDescription;
+    private final String applicationName;
+    private final String applicationDescription;
+    private final String applicationVersion;
 
-    @Value("${documentation.application.version}")
-    String applicationVersion;
-
-    // Methods
+    public OpenApiConfiguration(
+            @Value("${spring.application.name}") String applicationName,
+            @Value("${documentation.application.description}") String applicationDescription,
+            @Value("${documentation.application.version}") String applicationVersion) {
+        this.applicationName = applicationName;
+        this.applicationDescription = applicationDescription;
+        this.applicationVersion = applicationVersion;
+    }
 
     /**
      * Builds the OpenAPI document used by Swagger UI and client generation tools.
@@ -38,9 +40,7 @@ public class OpenApiConfiguration {
      * @return configured OpenAPI descriptor
      */
     @Bean
-    public OpenAPI learningPlatformOpenApi() {
-
-        // General configuration
+    public OpenAPI swissotelOpenApi() {
         var openApi = new OpenAPI();
         openApi
                 .info(new Info()
@@ -48,27 +48,21 @@ public class OpenApiConfiguration {
                         .description(this.applicationDescription)
                         .version(this.applicationVersion)
                         .contact(new Contact()
-                                .name("ACME Learning Center Support")
-                                .email("support@acme-learning.com")
-                                .url("https://acme-learning.com/support"))
+                                .name("Swissotel360 Support")
+                                .email("support@swissotel360.com")
+                                .url("https://swissotel360.com/support"))
                         .license(new License()
                                 .name("Apache 2.0")
                                 .url("https://www.apache.org/licenses/LICENSE-2.0.html")))
                 .externalDocs(new ExternalDocumentation()
-                        .description("ACME Learning Platform wiki Documentation")
-                        .url("https://acme-learning-platform.wiki.github.io/docs"));
+                        .description("Swissotel360 Documentation")
+                        .url("https://swissotel360.com/docs"));
 
         // Add server configurations
         openApi.servers(List.of(
                 new Server()
                         .url("http://localhost:8080")
-                        .description("Local Development Environment"),
-                new Server()
-                        .url("https://staging-api.acme-learning.com")
-                        .description("Staging Environment"),
-                new Server()
-                        .url("https://api.acme-learning.com")
-                        .description("Production Environment")
+                        .description("Local Development Environment")
         ));
 
         // Add a security scheme
@@ -79,11 +73,11 @@ public class OpenApiConfiguration {
                 .components(new Components()
                         .addSecuritySchemes(securitySchemeName,
                                 new SecurityScheme()
-                                        .name(securitySchemeName)
-                                        .type(SecurityScheme.Type.HTTP)
-                                        .scheme("bearer")
-                                        .bearerFormat("JWT")
-                                        .description("JWT Bearer token for API authentication")));
+                                         .name(securitySchemeName)
+                                         .type(SecurityScheme.Type.HTTP)
+                                         .scheme("bearer")
+                                         .bearerFormat("JWT")
+                                         .description("JWT Bearer token for API authentication")));
 
         return openApi;
     }

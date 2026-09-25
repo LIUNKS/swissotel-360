@@ -7,10 +7,11 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
+import java.time.Instant;
 
 /**
- * Application lifecycle handler that ensures IAM roles are seeded when the application is ready.
+ * Application lifecycle handler that ensures IAM roles are seeded when the
+ * application is ready.
  */
 @Service
 @Slf4j
@@ -22,20 +23,17 @@ public class ApplicationReadyEventHandler {
     }
 
     /**
-     * Handles the Spring application-ready event and triggers role seeding verification.
+     * Handles the Spring application-ready event and triggers role seeding
+     * verification.
      *
      * @param event Spring Boot readiness event
      */
     @EventListener
     public void on(ApplicationReadyEvent event) {
         var applicationName = event.getApplicationContext().getId();
-        log.info("Starting to verify if roles seeding is needed for {} at {}", applicationName, currentTimestamp());
+        log.info("Starting to verify if roles seeding is needed for {} at {}", applicationName, Instant.now());
         var seedRolesCommand = new SeedRolesCommand();
         roleCommandService.handle(seedRolesCommand);
-        log.info("Roles seeding verification finished for {} at {}", applicationName, currentTimestamp());
-    }
-
-    private Timestamp currentTimestamp() {
-        return new Timestamp(System.currentTimeMillis());
+        log.info("Roles seeding verification finished for {} at {}", applicationName, Instant.now());
     }
 }

@@ -6,32 +6,28 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.time.Instant;
+import java.util.UUID;
 
-/**
- * JPA persistence entity for IAM users.
- */
 @Entity
 @Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
 public class UserPersistenceEntity extends AuditableAbstractPersistenceEntity {
-
-    @Column(name = "username", nullable = false, unique = true, length = 50)
-    private String username;
-
-    @Column(name = "password", nullable = false, length = 120)
+    @Column(name = "public_id", nullable = false, unique = true)
+    private UUID publicId;
+    @Column(name = "full_name", nullable = false, length = 120)
+    private String fullName;
+    @Column(name = "email", nullable = false, unique = true, length = 150)
+    private String email;
+    @Column(name = "password_hash", nullable = false, length = 255)
     private String password;
-
-    @Column(name = "active_session_id", length = 36)
-    private String activeSessionId;
-
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "user_roles",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<RolePersistenceEntity> roles = new HashSet<>();
+    @Column(name = "status", nullable = false, length = 20)
+    private String status;
+    @Column(name = "last_login_at")
+    private Instant lastLoginAt;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id", nullable = false)
+    private RolePersistenceEntity role;
 }
-

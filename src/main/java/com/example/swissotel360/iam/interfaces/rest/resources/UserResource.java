@@ -1,24 +1,17 @@
 package com.example.swissotel360.iam.interfaces.rest.resources;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.List;
+import java.util.UUID;
 
-/**
- * Resource representing an IAM user returned by the REST API.
- */
-@Schema(
-    name = "UserResponse",
-    description = "User information response",
-    example = "{\"id\": 1, \"username\": \"john.doe\", \"roles\": [\"ROLE_GUEST\", \"ROLE_RECEPTIONIST\"]}"
-)
+@Schema(description = "Represents a user in the system")
 public record UserResource(
-    @Schema(description = "User unique identifier", example = "1")
-    Long id,
+                @Schema(description = "Internal database identifier", example = "1") @jakarta.validation.constraints.NotNull Long id,
 
-    @Schema(description = "User username", example = "john.doe")
-    String username,
+                @Schema(description = "Public UUID identifier", example = "b1398429-d78b-4f7b-be43-bb3fd351bc68") @jakarta.validation.constraints.NotNull UUID publicId,
 
-    @Schema(description = "User assigned roles", example = "[\"ROLE_GUEST\"]")
-    List<String> roles
-) {
+                @Schema(description = "Full name of the user", example = "John Doe") @jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Size(max = 120) String fullName,
+
+                @Schema(description = "User email", example = "john.doe@example.com") @jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Email @jakarta.validation.constraints.Size(max = 150) String email,
+
+                @Schema(description = "Assigned role", example = "ROLE_GUEST") @jakarta.validation.constraints.NotBlank String role) {
 }

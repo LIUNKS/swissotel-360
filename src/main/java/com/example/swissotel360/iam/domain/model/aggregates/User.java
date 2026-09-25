@@ -1,80 +1,79 @@
 package com.example.swissotel360.iam.domain.model.aggregates;
+
 import com.example.swissotel360.iam.domain.model.entities.Role;
+import com.example.swissotel360.iam.domain.model.valueobjects.EmailAddress;
 import com.example.swissotel360.shared.domain.model.aggregates.AbstractDomainAggregateRoot;
-
 import lombok.Getter;
-import lombok.Setter;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.time.Instant;
+import java.util.UUID;
 
 /**
- * User aggregate root.
+ * IAM User Domain Aggregate Root.
  */
 @Getter
 public class User extends AbstractDomainAggregateRoot<User> {
-
-    @Setter
     private Long id;
-    @Setter
-    private String username;
-    @Setter
+    private UUID publicId;
+    private String fullName;
+    private EmailAddress email;
     private String password;
-    @Setter
-    private Set<Role> roles;
-    @Setter
-    private String activeSessionId;
+    private Role role;
+    private String status;
+    private Instant lastLoginAt;
 
     public User() {
-        this.roles = new HashSet<>();
+        this.publicId = UUID.randomUUID();
+        this.status = "active";
     }
 
-    public User(String username, String password) {
-        this.username = username;
+    public User(String fullName, String email, String password, Role role) {
+        this(fullName, new EmailAddress(email), password, role);
+    }
+
+    public User(String fullName, EmailAddress email, String password, Role role) {
+        this();
+        if (fullName == null || fullName.isBlank()) {
+            throw new IllegalArgumentException("Full name cannot be null or blank");
+        }
+        if (email == null) {
+            throw new IllegalArgumentException("Email cannot be null");
+        }
+        if (password == null || password.isBlank()) {
+            throw new IllegalArgumentException("Password cannot be null or blank");
+        }
+        if (role == null) {
+            throw new IllegalArgumentException("Role cannot be null");
+        }
+        this.fullName = fullName.trim();
+        this.email = email;
         this.password = password;
-        this.roles = new HashSet<>();
+        this.role = role;
     }
 
-    public User(String username, String password, List<Role> roles) {
-        this(username, password);
-        addRoles(roles);
+    // Constructor used by Persistence Assembler
+    public User(Long id, UUID publicId, String fullName, String email, String password, Role role, String status,
+            Instant lastLoginAt) {
+        this(id, publicId, fullName, new EmailAddress(email), password, role, status, lastLoginAt);
     }
 
-    /**
-     * Add a role to the user.
-     *
-     * @param role the role to add
-     * @return the user with the added role
-     */
-    public User addRole(Role role) {
-        this.roles.add(role);
-        return this;
+    public User(Long id, UUID publicId, String fullName, EmailAddress email, String password, Role role, String status,
+            Instant lastLoginAt) {
+        this.id = id;
+        this.publicId = publicId != null ? publicId : UUID.randomUUID();
+        this.fullName = fullName != null ? fullName.trim() : "";
+        this.email = email;
+        this.password = password;
+        this.role = role;
+        this.status = status != null ? status : "active";
+        this.lastLoginAt = lastLoginAt;
     }
 
-    /**
-     * Add a list of roles to the user.
-     *
-     * @param roles the list of roles to add
-     * @return the user with the added roles
-     */
-    public User addRoles(List<Role> roles) {
-        var validatedRoleSet = Role.validateRoleSet(roles);
-        this.roles.addAll(validatedRoleSet);
-        return this;
+    public String getEmail() {
+        return email != null ? email.address() : null;
     }
 
-    /**
-     * Starts a new session by generating a new session ID.
-     */
-    public void startNewSession() {
-        this.activeSessionId = java.util.UUID.randomUUID().toString();
-    }
-
-    /**
-     * Ends the current session by clearing the session ID.
-     */
-    public void endSession() {
-        this.activeSessionId = null;
+    public void updateLastLoginAt() {
+        this.lastLoginAt = Instant.now();
     }
 }

@@ -1,55 +1,50 @@
 package com.example.swissotel360.shared.domain.model.aggregates;
 
 import org.jspecify.annotations.NullMarked;
-import org.springframework.data.domain.AbstractAggregateRoot;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Base class for all domain aggregate roots.
  *
- * <p>Extends Spring Data Commons' {@link AbstractAggregateRoot} to gain
- * domain event registration support ({@code registerEvent}) without
- * pulling in any JPA or persistence concern. Identity and auditing are
- * intentionally left to the infrastructure layer.</p>
- *
- * <p>All bounded-context domain aggregate roots should extend this class.
- * Persistence-specific behavior belongs to dedicated infrastructure
- * persistence entities.</p>
+ * <p>Pure Java base class for domain aggregates providing domain event registration
+ * and retrieval without pulling in any Spring Data, JPA, or framework-specific concerns.</p>
  *
  * @param <T> the concrete aggregate root type
  */
 @NullMarked
-public abstract class AbstractDomainAggregateRoot<T extends AbstractDomainAggregateRoot<T>>
-        extends AbstractAggregateRoot<T> {
+public abstract class AbstractDomainAggregateRoot<T extends AbstractDomainAggregateRoot<T>> {
+
+    private final transient List<Object> domainEvents = new ArrayList<>();
 
     /**
      * Registers a domain event to be published after this aggregate is saved.
      *
      * @param event the domain event to register
+     * @return this aggregate root instance
      */
-    protected void registerDomainEvent(Object event) {
-        super.registerEvent(event);
+    @SuppressWarnings("unchecked")
+    protected T registerDomainEvent(Object event) {
+        this.domainEvents.add(event);
+        return (T) this;
     }
 
     /**
      * Returns all domain events registered on this aggregate since the last publication.
-     * Exposed as {@code public} so repository adapters can retrieve and publish them
-     * after the aggregate has been persisted.
      *
-     * @return the registered domain events
+     * @return an unmodifiable collection of registered domain events
      */
-    @Override
     public Collection<Object> domainEvents() {
-        return super.domainEvents();
+        return Collections.unmodifiableList(this.domainEvents);
     }
 
     /**
      * Clears all registered domain events.
-     * Exposed as {@code public} so repository adapters can clear events after publishing.
      */
-    @Override
     public void clearDomainEvents() {
-        super.clearDomainEvents();
+        this.domainEvents.clear();
     }
 }

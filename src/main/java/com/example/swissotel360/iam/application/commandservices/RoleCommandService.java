@@ -13,4 +13,3 @@ public interface RoleCommandService {
      */
     void handle(SeedRolesCommand command);
 }
-

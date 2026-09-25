@@ -1,22 +1,17 @@
 package com.example.swissotel360.iam.domain.repositories;
 
 import com.example.swissotel360.iam.domain.model.aggregates.User;
-
-import java.util.List;
 import java.util.Optional;
 
 /**
- * IAM user repository port.
+ * Domain repository port for IAM User aggregate.
  */
 public interface UserRepository {
+    Optional<User> findByEmail(String email);
+
     Optional<User> findById(Long id);
-
-    Optional<User> findByUsername(String username);
-
-    List<User> findAll();
 
     User save(User user);
 
-    boolean existsByUsername(String username);
+    boolean existsByEmail(String email);
 }
-

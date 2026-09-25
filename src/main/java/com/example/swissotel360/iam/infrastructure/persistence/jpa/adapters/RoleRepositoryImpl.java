@@ -11,7 +11,8 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Repository adapter that bridges the IAM role domain repository port with Spring Data JPA.
+ * Repository adapter that bridges the IAM role domain repository port with
+ * Spring Data JPA.
  */
 @Repository
 public class RoleRepositoryImpl implements RoleRepository {
@@ -24,18 +25,18 @@ public class RoleRepositoryImpl implements RoleRepository {
 
     @Override
     public Optional<Role> findByName(Roles name) {
-        return rolePersistenceRepository.findByName(name).map(RolePersistenceAssembler::toDomainFromPersistence);
+        return rolePersistenceRepository.findByName(name).map(RolePersistenceAssembler::toDomainEntity);
     }
 
     @Override
     public List<Role> findAll() {
-        return rolePersistenceRepository.findAll().stream().map(RolePersistenceAssembler::toDomainFromPersistence).toList();
+        return rolePersistenceRepository.findAll().stream().map(RolePersistenceAssembler::toDomainEntity).toList();
     }
 
     @Override
     public Role save(Role role) {
-        var saved = rolePersistenceRepository.save(RolePersistenceAssembler.toPersistenceFromDomain(role));
-        return RolePersistenceAssembler.toDomainFromPersistence(saved);
+        var saved = rolePersistenceRepository.save(RolePersistenceAssembler.toPersistenceEntity(role));
+        return RolePersistenceAssembler.toDomainEntity(saved);
     }
 
     @Override
@@ -43,4 +44,3 @@ public class RoleRepositoryImpl implements RoleRepository {
         return rolePersistenceRepository.existsByName(name);
     }
 }
-

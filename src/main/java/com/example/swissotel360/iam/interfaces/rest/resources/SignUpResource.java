@@ -1,37 +1,17 @@
 package com.example.swissotel360.iam.interfaces.rest.resources;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import java.util.List;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
-/**
- * Resource received to register a new IAM user.
- */
-@Schema(
-    name = "SignUpRequest",
-    description = "User sign-up request with credentials and roles",
-    example = "{\"username\": \"john.doe\", \"password\": \"SecurePass123!\", \"roles\": [\"ROLE_GUEST\"]}"
-)
+@Schema(description = "Data required for user registration")
 public record SignUpResource(
-    @Schema(
-        description = "Desired username",
-        example = "john.doe",
-        minLength = 3,
-        maxLength = 50
-    )
-    String username,
+                @Schema(description = "Full name of the user", example = "John Doe") @NotBlank @Size(max = 120) String fullName,
 
-    @Schema(
-        description = "User password (minimum 8 characters)",
-        example = "SecurePass123!",
-        minLength = 8,
-        maxLength = 255
-    )
-    String password,
+                @Schema(description = "Email of the user, used for login", example = "john.doe@example.com") @NotBlank @Email @Size(max = 150) String email,
 
-    @Schema(
-        description = "Roles to assign to the user",
-        example = "[\"ROLE_GUEST\"]"
-    )
-    List<String> roles
-) {
+                @Schema(description = "Password for the account", example = "secretPassword123") @NotBlank @Size(min = 6, max = 120) String password,
+
+                @Schema(description = "Role to assign", example = "ROLE_GUEST") @NotBlank String role) {
 }

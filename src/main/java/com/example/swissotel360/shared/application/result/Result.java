@@ -6,8 +6,10 @@ import java.util.Optional;
 import java.util.function.Function;
 
 /**
- * Represents the result of a command or operation that can either succeed with a value or fail with an error.
- * This type encodes the possibility of failure in the type system, making error cases explicit and composable.
+ * Represents the result of a command or operation that can either succeed with
+ * a value or fail with an error.
+ * This type encodes the possibility of failure in the type system, making error
+ * cases explicit and composable.
  *
  * @param <T> The type of the successful result value
  * @param <E> The type of the error/failure information
@@ -66,7 +68,8 @@ public sealed interface Result<T, E> {
     }
 
     /**
-     * Returns an Optional containing the value if this is a success, otherwise an empty Optional.
+     * Returns an Optional containing the value if this is a success, otherwise an
+     * empty Optional.
      */
     default Optional<T> toOptional() {
         return switch (this) {
@@ -86,7 +89,8 @@ public sealed interface Result<T, E> {
     }
 
     /**
-     * Applies a function to the error if this is a failure, otherwise returns this unchanged.
+     * Applies a function to the error if this is a failure, otherwise returns this
+     * unchanged.
      */
     default <E2> Result<T, E2> mapError(Function<E, E2> f) {
         return switch (this) {
@@ -126,4 +130,3 @@ public sealed interface Result<T, E> {
         };
     }
 }
-

@@ -3,7 +3,7 @@ package com.example.swissotel360.iam.domain.model.valueobjects;
 /**
  * Roles
  * <p>
- *     This enum represents the roles in the system.
+ * This enum represents the roles in the system.
  * </p>
  */
 public enum Roles {

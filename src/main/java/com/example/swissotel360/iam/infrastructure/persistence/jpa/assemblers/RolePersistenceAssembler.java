@@ -2,30 +2,24 @@ package com.example.swissotel360.iam.infrastructure.persistence.jpa.assemblers;
 
 import com.example.swissotel360.iam.domain.model.entities.Role;
 import com.example.swissotel360.iam.infrastructure.persistence.jpa.entities.RolePersistenceEntity;
+import com.example.swissotel360.iam.domain.model.valueobjects.Roles;
 
-/**
- * Static assembler between IAM role domain and persistence representations.
- */
-public final class RolePersistenceAssembler {
-
-    private RolePersistenceAssembler() {
-    }
-
-    public static Role toDomainFromPersistence(RolePersistenceEntity entity) {
-        if (entity == null) return null;
-        return new Role(entity.getId(), entity.getName());
-    }
-
-    public static RolePersistenceEntity toPersistenceFromDomain(Role role) {
-        if (role == null) return null;
+public class RolePersistenceAssembler {
+    public static RolePersistenceEntity toPersistenceEntity(Role role) {
+        if (role == null)
+            return null;
         var entity = new RolePersistenceEntity();
-        // Only set ID if the role is being updated (has a non-null ID)
-        // For new roles, leave ID null to allow JPA to generate it
-        if (role.getId() != null) {
+        if (role.getId() != null)
             entity.setId(role.getId());
-        }
         entity.setName(role.getName());
         return entity;
     }
-}
 
+    public static Role toDomainEntity(RolePersistenceEntity entity) {
+        if (entity == null)
+            return null;
+        var role = new Role(Roles.valueOf(entity.getName().name()));
+        role.setId(entity.getId());
+        return role;
+    }
+}

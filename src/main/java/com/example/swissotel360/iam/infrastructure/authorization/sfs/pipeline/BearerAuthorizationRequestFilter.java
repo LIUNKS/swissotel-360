@@ -1,36 +1,25 @@
 package com.example.swissotel360.iam.infrastructure.authorization.sfs.pipeline;
 
-import com.example.swissotel360.iam.infrastructure.authorization.sfs.model.UserDetailsImpl;
 import com.example.swissotel360.iam.infrastructure.authorization.sfs.model.UsernamePasswordAuthenticationTokenBuilder;
 import com.example.swissotel360.iam.infrastructure.tokens.jwt.BearerTokenService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
-
+import org.springframework.lang.NonNull;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-
 import java.io.IOException;
 
-/**
- * Bearer Authorization Request Filter.
- * <p>
- * This class is responsible for filtering requests and setting the user authentication.
- * It extends the OncePerRequestFilter class.
- * </p>
- * @see OncePerRequestFilter
- */
-@Slf4j
+@Component
 public class BearerAuthorizationRequestFilter extends OncePerRequestFilter {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(BearerAuthorizationRequestFilter.class);
     private final BearerTokenService tokenService;
-
-
     @Qualifier("defaultUserDetailsService")
     private final UserDetailsService userDetailsService;
 
@@ -39,38 +28,23 @@ public class BearerAuthorizationRequestFilter extends OncePerRequestFilter {
         this.userDetailsService = userDetailsService;
     }
 
-    /**
-     * This method is responsible for filtering requests and setting the user authentication.
-     * @param request The request object.
-     * @param response The response object.
-     * @param filterChain The filter chain object.
-     */
     @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+            @NonNull FilterChain filterChain) throws ServletException, IOException {
         try {
             String token = tokenService.getBearerTokenFrom(request);
-            log.info("Token: {}", token);
-            if (token != null && tokenService.validateToken(token)) {
-                String username = tokenService.getUsernameFromToken(token);
-                String tokenSessionId = tokenService.getActiveSessionIdFromToken(token);
-                var userDetails = userDetailsService.loadUserByUsername(username);
-                
-                if (userDetails instanceof UserDetailsImpl customUserDetails) {
-                    if (customUserDetails.getActiveSessionId() != null && 
-                        customUserDetails.getActiveSessionId().equals(tokenSessionId)) {
-                        SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationTokenBuilder.build(userDetails, request));
-                    } else {
-                        log.info("Token session is invalid or expired for user: {}", username);
-                    }
+            if (token != null) {
+                if (tokenService.validateToken(token)) {
+                    String email = tokenService.getUsernameFromToken(token);
+                    var userDetails = userDetailsService.loadUserByUsername(email);
+                    var authentication = UsernamePasswordAuthenticationTokenBuilder.build(userDetails, request);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
                 } else {
-                    SecurityContextHolder.getContext().setAuthentication(UsernamePasswordAuthenticationTokenBuilder.build(userDetails, request));
+                    LOGGER.debug("Provided token is not valid");
                 }
-            } else {
-                log.info("Token is not valid");
             }
-
         } catch (Exception e) {
-            log.error("Cannot set user authentication: {}", e.getMessage());
+            LOGGER.error("Cannot set user authentication: {}", e.getMessage());
         }
         filterChain.doFilter(request, response);
     }

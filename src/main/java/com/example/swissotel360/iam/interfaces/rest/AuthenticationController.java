@@ -9,170 +9,82 @@ import com.example.swissotel360.iam.interfaces.rest.transform.AuthenticatedUserR
 import com.example.swissotel360.iam.interfaces.rest.transform.SignInCommandFromResourceAssembler;
 import com.example.swissotel360.iam.interfaces.rest.transform.SignUpCommandFromResourceAssembler;
 import com.example.swissotel360.iam.interfaces.rest.transform.UserResourceFromEntityAssembler;
-import com.example.swissotel360.shared.interfaces.rest.transform.ResponseEntityAssembler;
-import com.example.swissotel360.shared.interfaces.rest.transform.ErrorResponseAssembler;
 import com.example.swissotel360.shared.application.result.Result;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import com.example.swissotel360.iam.domain.model.aggregates.User;
-import com.example.swissotel360.iam.domain.model.commands.SignOutCommand;
-import org.springframework.security.core.Authentication;
+import com.example.swissotel360.shared.interfaces.rest.resources.ErrorResource;
+import com.example.swissotel360.shared.interfaces.rest.transform.ErrorResponseAssembler;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseCookie;
-import org.springframework.http.HttpHeaders;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
-/**
- * AuthenticationController
- * <p>
- *     This controller is responsible for handling authentication requests.
- *     It exposes two endpoints:
- *     <ul>
- *         <li>POST /api/v1/authentication/sign-in</li>
- *         <li>POST /api/v1/authentication/sign-up</li>
- *     </ul>
- * </p>
- */
 @RestController
 @RequestMapping(value = "/api/v1/authentication", produces = MediaType.APPLICATION_JSON_VALUE)
-@Tag(name = "Authentication", description = "Authentication and user registration endpoints")
+@Tag(name = "Authentication", description = "Authentication Endpoints")
 public class AuthenticationController {
+
     private final UserCommandService userCommandService;
 
     public AuthenticationController(UserCommandService userCommandService) {
         this.userCommandService = userCommandService;
     }
 
-    /**
-     * Handles the sign-in request.
-     * @param signInResource the sign-in request body with username and password.
-     * @return the authenticated user resource with JWT token.
-     */
-    @PostMapping("/sign-in")
-    @Operation(
-        summary = "User sign-in",
-        description = "Authenticates a user with provided credentials and returns JWT token for subsequent requests."
-    )
+    @Operation(summary = "Sign up a new user", description = "Registers a new user in the system with the specified role")
     @ApiResponses(value = {
-            @ApiResponse(
-                responseCode = "200",
-                description = "User authenticated successfully",
-                content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = AuthenticatedUserResource.class)
-                )
-            ),
-            @ApiResponse(
-                responseCode = "400",
-                description = "Invalid credentials or malformed request",
-                content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                responseCode = "404",
-                description = "User not found with provided username",
-                content = @Content(mediaType = "application/json")
-            )
+            @ApiResponse(responseCode = "201", description = "User successfully registered", content = @Content(schema = @Schema(implementation = UserResource.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input or validation failure", content = @Content(schema = @Schema(implementation = ErrorResource.class))),
+            @ApiResponse(responseCode = "409", description = "User email already exists", content = @Content(schema = @Schema(implementation = ErrorResource.class)))
     })
-    public ResponseEntity<?> signIn(@RequestBody SignInResource signInResource) {
-        var signInCommand = SignInCommandFromResourceAssembler.toCommandFromResource(signInResource);
-        var result = userCommandService.handle(signInCommand);
-        
-        return ResponseEntityAssembler.toResponseEntityFromResult(
-                result,
-                auth -> AuthenticatedUserResourceFromEntityAssembler.toResourceFromEntity(auth.getLeft()),
-                auth -> {
-                    ResponseCookie cookie = ResponseCookie.from("token", auth.getRight())
-                            .httpOnly(true)
-                            .path("/")
-                            .maxAge(24 * 60 * 60)
-                            .build();
-                    HttpHeaders headers = new HttpHeaders();
-                    headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
-                    return headers;
-                },
-                HttpStatus.OK
-        );
-    }
-
-    /**
-     * Handles the sign-up request.
-     * @param signUpResource the sign-up request body with username, password, and roles.
-     * @return the created user resource with assigned roles.
-     */
     @PostMapping("/sign-up")
-    @Operation(
-        summary = "User registration",
-        description = "Creates a new user account with provided credentials and assigns specified roles."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(
-                responseCode = "201",
-                description = "User created successfully",
-                content = @Content(
-                    mediaType = "application/json",
-                    schema = @Schema(implementation = UserResource.class)
-                )
-            ),
-            @ApiResponse(
-                responseCode = "400",
-                description = "Invalid input data or username already exists",
-                content = @Content(mediaType = "application/json")
-            ),
-            @ApiResponse(
-                responseCode = "409",
-                description = "Conflict - username already taken",
-                content = @Content(mediaType = "application/json")
-            )
-    })
-    public ResponseEntity<?> signUp(@RequestBody SignUpResource signUpResource) {
-        var signUpCommand = SignUpCommandFromResourceAssembler.toCommandFromResource(signUpResource);
-        var result = userCommandService.handle(signUpCommand);
+    public ResponseEntity<?> signUp(@Valid @RequestBody SignUpResource resource) {
+        var command = SignUpCommandFromResourceAssembler.toCommandFromResource(resource);
+        var result = userCommandService.handle(command);
         
-        return ResponseEntityAssembler.toResponseEntityFromResult(
-                result,
-                UserResourceFromEntityAssembler::toResourceFromEntity,
-                HttpStatus.CREATED
-        );
+        return switch (result) {
+            case Result.Success(var user) ->
+                new ResponseEntity<>(UserResourceFromEntityAssembler.toResourceFromEntity(user), HttpStatus.CREATED);
+            case Result.Failure(var error) ->
+                ErrorResponseAssembler.toErrorResponseFromApplicationError(error);
+        };
     }
 
-    /**
-     * Handles the sign-out request.
-     * @return a response indicating successful sign-out.
-     */
-    @PostMapping("/sign-out")
-    @Operation(
-        summary = "User sign-out",
-        description = "Logs out a user by clearing the authentication token cookie."
-    )
+    @Operation(summary = "Sign in user", description = "Authenticates a user and returns a session cookie and user details")
     @ApiResponses(value = {
-            @ApiResponse(
-                responseCode = "200",
-                description = "User signed out successfully"
-            )
+            @ApiResponse(responseCode = "200", description = "Successfully authenticated", content = @Content(schema = @Schema(implementation = AuthenticatedUserResource.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid credentials or input", content = @Content(schema = @Schema(implementation = ErrorResource.class))),
+            @ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ErrorResource.class)))
     })
-    public ResponseEntity<?> signOut(Authentication authentication) {
-        if (authentication != null && authentication.getName() != null) {
-            var command = new SignOutCommand(authentication.getName());
-            userCommandService.handle(command);
-        }
+    @PostMapping("/sign-in")
+    public ResponseEntity<?> signIn(@Valid @RequestBody SignInResource resource) {
+        var command = SignInCommandFromResourceAssembler.toCommandFromResource(resource);
+        var result = userCommandService.handle(command);
         
-        ResponseCookie cookie = ResponseCookie.from("token", "")
-                .httpOnly(true)
-                .path("/")
-                .maxAge(0)
-                .build();
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.SET_COOKIE, cookie.toString());
-        return ResponseEntity.ok().headers(headers).body("User signed out successfully");
+        return switch (result) {
+            case Result.Success(var pair) -> {
+                var user = pair.getLeft();
+                var token = pair.getRight();
+                
+                ResponseCookie cookie = ResponseCookie.from("token", token)
+                        .httpOnly(true)
+                        .secure(false) 
+                        .path("/")
+                        .maxAge(7 * 24 * 60 * 60)
+                        .build();
+                
+                yield ResponseEntity.ok()
+                        .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                        .body(AuthenticatedUserResourceFromEntityAssembler.toResourceFromEntity(user));
+            }
+            case Result.Failure(var error) ->
+                ErrorResponseAssembler.toErrorResponseFromApplicationError(error);
+        };
     }
 }

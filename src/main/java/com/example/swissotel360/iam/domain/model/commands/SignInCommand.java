@@ -1,14 +1,9 @@
 package com.example.swissotel360.iam.domain.model.commands;
 
-/**
- * Sign in command
- * <p>
- *     This class represents the command to sign in a user.
- * </p>
- * @param username the username of the user
- * @param password the password of the user
- *
- * @see com.example.swissotel360.iam.domain.model.aggregates.User
- */
-public record SignInCommand(String username, String password) {
+import jakarta.validation.constraints.NotBlank;
+
+public record SignInCommand(
+        @NotBlank String email, 
+        @NotBlank String password
+) {
 }

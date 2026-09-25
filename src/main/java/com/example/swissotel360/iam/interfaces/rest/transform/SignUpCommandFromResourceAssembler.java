@@ -1,23 +1,20 @@
 package com.example.swissotel360.iam.interfaces.rest.transform;
 
 import com.example.swissotel360.iam.domain.model.commands.SignUpCommand;
-import com.example.swissotel360.iam.domain.model.entities.Role;
+import com.example.swissotel360.iam.domain.model.valueobjects.Roles;
 import com.example.swissotel360.iam.interfaces.rest.resources.SignUpResource;
 
-import java.util.ArrayList;
-
-/**
- * Assembler that translates {@link SignUpResource} into {@link SignUpCommand}.
- */
 public class SignUpCommandFromResourceAssembler {
-    /**
-     * Converts the incoming sign-up resource to an application command.
-     *
-     * @param resource sign-up payload from REST API
-     * @return sign-up command consumed by the application layer
-     */
+    private SignUpCommandFromResourceAssembler() {
+    }
+
     public static SignUpCommand toCommandFromResource(SignUpResource resource) {
-        var roles = resource.roles() != null ? resource.roles().stream().map(name -> Role.toRoleFromName(name)).toList() : new ArrayList<Role>();
-        return new SignUpCommand(resource.username(), resource.password(), roles);
+        Roles role;
+        try {
+            role = Roles.valueOf(resource.role().trim().toUpperCase());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid role specified: " + resource.role());
+        }
+        return new SignUpCommand(resource.fullName(), resource.email(), resource.password(), role);
     }
 }

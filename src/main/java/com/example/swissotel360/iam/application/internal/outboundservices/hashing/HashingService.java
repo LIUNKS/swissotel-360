@@ -1,7 +1,8 @@
 package com.example.swissotel360.iam.application.internal.outboundservices.hashing;
 
 /**
- * Outbound port for password hashing operations required by the IAM application layer.
+ * Outbound port for password hashing operations required by the IAM application
+ * layer.
  */
 public interface HashingService {
     /**
@@ -15,7 +16,7 @@ public interface HashingService {
     /**
      * Verifies whether a raw password matches an encoded password.
      *
-     * @param rawPassword raw password value
+     * @param rawPassword     raw password value
      * @param encodedPassword encoded password representation
      * @return {@code true} when both values match; otherwise {@code false}
      */

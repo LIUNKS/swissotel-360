@@ -1,30 +1,12 @@
 package com.example.swissotel360.iam.interfaces.rest.resources;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
-/**
- * Resource received to authenticate an existing user.
- */
-@Schema(
-    name = "SignInRequest",
-    description = "User sign-in request with credentials",
-    example = "{\"username\": \"john.doe\", \"password\": \"SecurePass123!\"}"
-)
+@Schema(description = "Data required for user login")
 public record SignInResource(
-    @Schema(
-        description = "Username",
-        example = "john.doe",
-        minLength = 3,
-        maxLength = 50
-    )
-    String username,
+                @Schema(description = "Registered email", example = "john.doe@example.com") @NotBlank @Email String email,
 
-    @Schema(
-        description = "User password",
-        example = "SecurePass123!",
-        minLength = 8,
-        maxLength = 255
-    )
-    String password
-) {
+                @Schema(description = "User password", example = "secretPassword123") @NotBlank String password) {
 }

@@ -1,18 +1,15 @@
 package com.example.swissotel360.iam.domain.model.commands;
 
-import com.example.swissotel360.iam.domain.model.entities.Role;
-import java.util.List;
+import com.example.swissotel360.iam.domain.model.valueobjects.Roles;
 
-/**
- * Sign up command
- * <p>
- *     This class represents the command to sign up a user.
- * </p>
- * @param username the username of the user
- * @param password the password of the user
- * @param roles the roles of the user
- *
- * @see com.example.swissotel360.iam.domain.model.aggregates.User
- */
-public record SignUpCommand(String username, String password, List<Role> roles) {
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+public record SignUpCommand(
+        @NotBlank @Size(max = 120) String fullName, 
+        @NotBlank @Size(max = 150) String email, 
+        @NotBlank @Size(min = 6, max = 120) String password, 
+        @NotNull Roles role
+) {
 }

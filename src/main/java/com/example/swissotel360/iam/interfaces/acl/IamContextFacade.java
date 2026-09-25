@@ -1,89 +1,34 @@
 package com.example.swissotel360.iam.interfaces.acl;
 
-import com.example.swissotel360.iam.application.commandservices.UserCommandService;
-import com.example.swissotel360.iam.application.queryservices.UserQueryService;
-import com.example.swissotel360.iam.domain.model.commands.SignUpCommand;
-import com.example.swissotel360.iam.domain.model.entities.Role;
-import com.example.swissotel360.iam.domain.model.queries.GetUserByIdQuery;
-import com.example.swissotel360.iam.domain.model.queries.GetUserByUsernameQuery;
-import org.apache.logging.log4j.util.Strings;
-
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * ACL facade that exposes IAM bounded context capabilities to other contexts.
- *
- * <p>Provides a simplified integration surface for creating users and querying identity data
- * without leaking IAM internal model details.</p>
+ * Interface representing the Anti-Corruption Layer (ACL) facade for the IAM Bounded Context.
+ * Offers inter-context communication contracts avoiding domain entity coupling.
  */
-public class IamContextFacade {
-    private final UserCommandService userCommandService;
-    private final UserQueryService userQueryService;
-
-    public IamContextFacade(UserCommandService userCommandService, UserQueryService userQueryService) {
-        this.userCommandService = userCommandService;
-        this.userQueryService = userQueryService;
-    }
+public interface IamContextFacade {
 
     /**
-     * Creates a new user assigning the default role.
+     * Creates a new user with default role.
      *
-     * @param username username to register
-     * @param password raw password
-     * @return created user identifier, or {@code 0L} when creation fails
+     * @param fullName the user's full name
+     * @param email the user's email
+     * @param password the user's plain password
+     * @return the newly created user's ID, or 0 if creation fails
      */
-    public Long createUser(String username, String password) {
-        var signUpCommand = new SignUpCommand(username, password, List.of(Role.getDefaultRole()));
-        var result = userCommandService.handle(signUpCommand);
-        if (result instanceof com.example.swissotel360.shared.application.result.Result.Success(var user)) {
-            return user.getId();
-        }
-        return 0L;
-    }
+    Long createUser(String fullName, String email, String password);
 
     /**
-     * Creates a new user with explicit role names.
+     * Fetches a user identifier by email address.
      *
-     * @param username username to register
-     * @param password raw password
-     * @param roleNames role names to assign; unknown names are ignored
-     * @return created user identifier, or {@code 0L} when creation fails
+     * @param email the email to search for
+     * @return the user ID, or 0 if not found
      */
-    public Long createUser(String username, String password, List<String> roleNames) {
-        var roles = roleNames != null ? roleNames.stream().map(Role::toRoleFromName).toList() : new ArrayList<Role>();
-        var signUpCommand = new SignUpCommand(username, password, roles);
-        var result = userCommandService.handle(signUpCommand);
-        if (result instanceof com.example.swissotel360.shared.application.result.Result.Success(var user)) {
-            return user.getId();
-        }
-        return 0L;
-    }
+    Long fetchUserIdByEmail(String email);
 
     /**
-     * Fetches the identifier for a username.
+     * Fetches a user email address by user ID.
      *
-     * @param username username to search
-     * @return user identifier, or {@code 0L} when user is not found
+     * @param userId the user ID
+     * @return the email address, or empty string if not found
      */
-    public Long fetchUserIdByUsername(String username) {
-        var getUserByUsernameQuery = new GetUserByUsernameQuery(username);
-        var result = userQueryService.handle(getUserByUsernameQuery);
-        if (result.isEmpty()) return 0L;
-        return result.get().getId();
-    }
-
-    /**
-     * Fetches the username for a user identifier.
-     *
-     * @param userId user identifier
-     * @return username, or an empty string when user is not found
-     */
-    public String fetchUsernameByUserId(Long userId) {
-        var getUserByIdQuery = new GetUserByIdQuery(userId);
-        var result = userQueryService.handle(getUserByIdQuery);
-        if (result.isEmpty()) return Strings.EMPTY;
-        return result.get().getUsername();
-    }
-
+    String fetchEmailByUserId(Long userId);
 }

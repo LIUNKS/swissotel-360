@@ -1,23 +1,17 @@
 package com.example.swissotel360.iam.interfaces.rest.resources;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.util.UUID;
 
-/**
- * Resource returned after successful authentication.
- *
- * <p>Contains the authenticated user identifier and username.</p>
- * <p>The JWT token is securely transmitted via HttpOnly Cookie.</p>
- */
-@Schema(
-    name = "AuthenticatedUserResponse",
-    description = "Authenticated user information. The JWT token is securely transmitted via HttpOnly Cookie.",    
-    example = "{\"id\": 1, \"username\": \"john.doe\"}"
-)
+@Schema(description = "Data returned after successful authentication")
 public record AuthenticatedUserResource(
-    @Schema(description = "User unique identifier", example = "1")
-    Long id,
+                @Schema(description = "Internal database identifier", example = "1") @jakarta.validation.constraints.NotNull Long id,
 
-    @Schema(description = "User username", example = "john.doe")
-    String username
-) {
+                @Schema(description = "Public UUID identifier", example = "b1398429-d78b-4f7b-be43-bb3fd351bc68") @jakarta.validation.constraints.NotNull UUID publicId,
+
+                @Schema(description = "Full name of the user", example = "John Doe") @jakarta.validation.constraints.NotBlank @jakarta.validation.constraints.Size(max = 120) String fullName,
+
+                @Schema(description = "User email", example = "john.doe@example.com") @jakarta.validation.constraints.NotBlank String email,
+
+                @Schema(description = "Assigned role", example = "ROLE_GUEST") @jakarta.validation.constraints.NotBlank String role) {
 }

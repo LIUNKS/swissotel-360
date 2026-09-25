@@ -10,7 +10,8 @@ import org.springframework.stereotype.Service;
 import java.util.Arrays;
 
 /**
- * Implementation of {@link RoleCommandService} to handle {@link SeedRolesCommand}.
+ * Implementation of {@link RoleCommandService} to handle
+ * {@link SeedRolesCommand}.
  */
 @Service
 public class RoleCommandServiceImpl implements RoleCommandService {

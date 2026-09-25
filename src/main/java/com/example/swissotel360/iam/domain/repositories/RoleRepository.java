@@ -18,4 +18,3 @@ public interface RoleRepository {
 
     boolean existsByName(Roles name);
 }
-

@@ -6,7 +6,7 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.util.Date;
+import java.time.Instant;
 
 /**
  * Base JPA persistence entity for all persistence entities that require auditing.
@@ -29,11 +29,11 @@ public abstract class AuditableAbstractPersistenceEntity {
 
     @CreatedDate
     @Column(nullable = false, updatable = false)
-    private Date createdAt;
+    private Instant createdAt;
 
     @LastModifiedDate
     @Column(nullable = false)
-    private Date updatedAt;
+    private Instant updatedAt;
 
     /**
      * Sets the id. Used by assemblers when reconstructing a persistence entity
@@ -45,4 +45,3 @@ public abstract class AuditableAbstractPersistenceEntity {
         this.id = id;
     }
 }
-
