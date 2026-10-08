@@ -1,0 +1,31 @@
+package com.swissotel.swissotel360.iam.infrastructure.persistence.jpa.repositories;
+
+import com.swissotel.swissotel360.iam.domain.model.valueobjects.Roles;
+import com.swissotel.swissotel360.iam.infrastructure.persistence.jpa.entities.RolePersistenceEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+import java.util.Optional;
+
+/**
+ * Spring Data repository for IAM role persistence entities.
+ */
+
+public interface RolePersistenceRepository extends JpaRepository<RolePersistenceEntity, Long> {
+
+    /**
+     * This method is responsible for finding the role by name.
+     * 
+     * @param name The role name.
+     * @return The role object.
+     */
+    Optional<RolePersistenceEntity> findByName(Roles name);
+
+    /**
+     * This method is responsible for checking if the role exists by name.
+     * 
+     * @param name The role name.
+     * @return True if the role exists, false otherwise.
+     */
+    boolean existsByName(Roles name);
+
+}
