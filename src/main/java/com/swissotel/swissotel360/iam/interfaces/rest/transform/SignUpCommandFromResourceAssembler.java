@@ -9,12 +9,6 @@ public class SignUpCommandFromResourceAssembler {
     }
 
     public static SignUpCommand toCommandFromResource(SignUpResource resource) {
-        Roles role;
-        try {
-            role = Roles.valueOf(resource.role().trim().toUpperCase());
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid role specified: " + resource.role());
-        }
-        return new SignUpCommand(resource.fullName(), resource.email(), resource.password(), role);
+        return new SignUpCommand(resource.fullName(), resource.email(), resource.password(), Roles.ROLE_GUEST);
     }
 }
