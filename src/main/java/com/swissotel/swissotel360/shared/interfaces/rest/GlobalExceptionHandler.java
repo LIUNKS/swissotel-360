@@ -2,10 +2,16 @@ package com.swissotel.swissotel360.shared.interfaces.rest;
 
 import com.swissotel.swissotel360.shared.application.result.ApplicationError;
 import com.swissotel.swissotel360.shared.interfaces.rest.transform.ErrorResponseAssembler;
+import com.swissotel.swissotel360.guests.domain.exceptions.DocumentTypeNotFoundException;
+import com.swissotel.swissotel360.guests.domain.exceptions.DuplicateGuestException;
+import com.swissotel.swissotel360.guests.domain.exceptions.GuestNotFoundException;
+import com.swissotel.swissotel360.shared.interfaces.rest.resources.ErrorResource;
 
 import org.jspecify.annotations.NullMarked;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -24,6 +30,27 @@ import java.util.ResourceBundle;
 @NullMarked
 public class GlobalExceptionHandler {
     private static final String MESSAGES_BASENAME = "messages";
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResource> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(new ErrorResource("forbidden", "Permission denied", ex.getMessage()));
+    }
+
+    @ExceptionHandler(GuestNotFoundException.class)
+    public ResponseEntity<ErrorResource> handleGuestNotFound(GuestNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResource("guest_not_found", "Guest not found", ex.getMessage()));
+    }
+
+    @ExceptionHandler(DocumentTypeNotFoundException.class)
+    public ResponseEntity<ErrorResource> handleDocumentTypeNotFound(DocumentTypeNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResource("document_type_not_found", "Document type not found", ex.getMessage()));
+    }
+
+    @ExceptionHandler(DuplicateGuestException.class)
+    public ResponseEntity<ErrorResource> handleDuplicateGuest(DuplicateGuestException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResource("duplicate_document", "A guest with this document already exists", ex.getMessage()));
+    }
 
     /**
      * Handles validation exceptions from Spring's request body validation.
