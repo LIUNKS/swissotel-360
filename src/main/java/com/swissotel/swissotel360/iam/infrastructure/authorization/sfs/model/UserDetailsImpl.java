@@ -7,7 +7,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.ArrayList;
 
 @Getter
 @EqualsAndHashCode
@@ -23,8 +23,17 @@ public class UserDetailsImpl implements UserDetails {
     }
 
     public static UserDetailsImpl build(User user) {
-        GrantedAuthority authority = new SimpleGrantedAuthority(user.getRole().getStringName());
-        return new UserDetailsImpl(user.getEmail(), user.getPassword(), Collections.singletonList(authority));
+        var authorities = new ArrayList<GrantedAuthority>();
+        authorities.add(new SimpleGrantedAuthority(user.getRole().getStringName()));
+        // These capabilities match the grants seeded in V1__init_schema.sql.
+        switch (user.getRole().getStringName()) {
+            case "ROLE_SUPER_ADMIN", "ROLE_MANAGER", "ROLE_RECEPTIONIST" -> {
+                authorities.add(new SimpleGrantedAuthority("guests.view"));
+                authorities.add(new SimpleGrantedAuthority("guests.manage"));
+            }
+            default -> { }
+        }
+        return new UserDetailsImpl(user.getEmail(), user.getPassword(), authorities);
     }
 
     @Override
