@@ -18,7 +18,7 @@ public class HashingServiceImpl implements BCryptHashingService {
 
 	/**
 	 * Hash a password using the BCrypt algorithm
-	 * 
+	 *
 	 * @param rawPassword
 	 *                        the password to hash
 	 * @return String the hashed password
@@ -30,7 +30,7 @@ public class HashingServiceImpl implements BCryptHashingService {
 
 	/**
 	 * Check if a raw password matches a hashed password
-	 * 
+	 *
 	 * @param rawPassword
 	 *                            the raw password
 	 * @param encodedPassword

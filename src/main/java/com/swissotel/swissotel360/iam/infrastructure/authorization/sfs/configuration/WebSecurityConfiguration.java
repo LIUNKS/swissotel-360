@@ -44,7 +44,7 @@ public class WebSecurityConfiguration {
 
 	/**
 	 * This method creates the Bearer Authorization Request Filter.
-	 * 
+	 *
 	 * @return The Bearer Authorization Request Filter
 	 * @see BearerAuthorizationRequestFilter
 	 */
@@ -55,7 +55,7 @@ public class WebSecurityConfiguration {
 
 	/**
 	 * This method creates the authentication manager.
-	 * 
+	 *
 	 * @param authenticationConfiguration
 	 *                                        The
 	 *                                        {@link AuthenticationConfiguration}
@@ -73,7 +73,7 @@ public class WebSecurityConfiguration {
 
 	/**
 	 * This method creates the authentication provider.
-	 * 
+	 *
 	 * @return The {@link DaoAuthenticationProvider} authentication provider with
 	 *         the user details service and the password encoder
 	 */
@@ -86,7 +86,7 @@ public class WebSecurityConfiguration {
 
 	/**
 	 * This method creates the password encoder.
-	 * 
+	 *
 	 * @return The {@link PasswordEncoder} instance with the hashing service
 	 */
 	@Bean
@@ -137,7 +137,7 @@ public class WebSecurityConfiguration {
 
 	/**
 	 * This is the constructor of the class.
-	 * 
+	 *
 	 * @param userDetailsService
 	 *                                     The user details service
 	 * @param tokenService

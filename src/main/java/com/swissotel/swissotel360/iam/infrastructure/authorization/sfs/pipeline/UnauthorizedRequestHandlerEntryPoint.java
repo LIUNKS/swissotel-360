@@ -17,7 +17,7 @@ import java.io.IOException;
  * It is used by the Spring Security framework to handle unauthorized requests.
  * It implements the AuthenticationEntryPoint interface.
  * </p>
- * 
+ *
  * @see AuthenticationEntryPoint
  */
 
@@ -28,7 +28,7 @@ public class UnauthorizedRequestHandlerEntryPoint implements AuthenticationEntry
 	/**
 	 * This method is called by the Spring Security framework when an unauthorized
 	 * request is detected.
-	 * 
+	 *
 	 * @param request
 	 *                                    The request that caused the exception
 	 * @param response
