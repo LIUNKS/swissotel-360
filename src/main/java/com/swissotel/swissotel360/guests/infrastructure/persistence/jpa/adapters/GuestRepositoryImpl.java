@@ -42,6 +42,9 @@ public class GuestRepositoryImpl implements GuestRepository {
     public boolean existsByDocument(Long typeId, String number) { return guests.existsByDocumentType_IdAndDocumentNumber(typeId, number); }
 
     @Override
+    public boolean existsByUserId(Long userId) { return guests.existsByUserId(userId); }
+
+    @Override
     public GuestPage search(String query, int page, int size) {
         var pageable = PageRequest.of(page, size, Sort.by("lastName").ascending().and(Sort.by("firstName").ascending()));
         var term = query == null ? "" : query.trim();

@@ -1,5 +1,8 @@
 package com.swissotel.swissotel360.iam.interfaces.acl;
 
+import java.util.Optional;
+import java.util.UUID;
+
 /**
  * Interface representing the Anti-Corruption Layer (ACL) facade for the IAM Bounded Context.
  * Offers inter-context communication contracts avoiding domain entity coupling.
@@ -31,4 +34,7 @@ public interface IamContextFacade {
      * @return the email address, or empty string if not found
      */
     String fetchEmailByUserId(Long userId);
+
+    /** Resolves an IAM user's internal identifier from its public identifier. */
+    Optional<Long> fetchUserIdByPublicId(UUID userPublicId);
 }

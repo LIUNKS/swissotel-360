@@ -1,5 +1,6 @@
 package com.swissotel.swissotel360.guests.domain.model.aggregates;
 
+import com.swissotel.swissotel360.guests.domain.exceptions.UserAlreadyLinkedException;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
@@ -7,7 +8,7 @@ import java.util.UUID;
 public class Guest {
     private final Long id;
     private final UUID publicId;
-    private final Long userId;
+    private Long userId;
     private final Long documentTypeId;
     private final String documentTypeCode;
     private final String documentNumber;
@@ -47,6 +48,12 @@ public class Guest {
         this.email = email;
         this.phone = phone;
         this.countryOfOrigin = countryOfOrigin;
+    }
+
+    public void linkUserAccount(Long userId) {
+        if (this.userId != null) throw new UserAlreadyLinkedException();
+        if (userId == null) throw new IllegalArgumentException("IAM user identifier is required");
+        this.userId = userId;
     }
 
     public Long getId() { return id; }

@@ -10,5 +10,6 @@ public interface GuestRepository {
     Optional<Guest> findByPublicId(UUID publicId);
     Optional<Guest> findByDocument(Long documentTypeId, String documentNumber);
     boolean existsByDocument(Long documentTypeId, String documentNumber);
+    boolean existsByUserId(Long userId);
     GuestPage search(String query, int page, int size);
 }

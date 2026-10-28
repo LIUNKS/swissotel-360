@@ -5,6 +5,9 @@ import com.swissotel.swissotel360.shared.interfaces.rest.transform.ErrorResponse
 import com.swissotel.swissotel360.guests.domain.exceptions.DocumentTypeNotFoundException;
 import com.swissotel.swissotel360.guests.domain.exceptions.DuplicateGuestException;
 import com.swissotel.swissotel360.guests.domain.exceptions.GuestNotFoundException;
+import com.swissotel.swissotel360.guests.domain.exceptions.InvalidDocumentNumberException;
+import com.swissotel.swissotel360.guests.domain.exceptions.UserAlreadyLinkedException;
+import com.swissotel.swissotel360.guests.domain.exceptions.UserNotFoundException;
 import com.swissotel.swissotel360.shared.interfaces.rest.resources.ErrorResource;
 
 import org.jspecify.annotations.NullMarked;
@@ -19,6 +22,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.text.MessageFormat;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
+import java.util.Map;
 
 /**
  * Global exception handler for REST API.
@@ -38,18 +42,36 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler(GuestNotFoundException.class)
-    public ResponseEntity<ErrorResource> handleGuestNotFound(GuestNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResource("guest_not_found", "Guest not found", ex.getMessage()));
+    public ResponseEntity<Map<String, String>> handleGuestNotFound(GuestNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "guest_not_found"));
     }
 
     @ExceptionHandler(DocumentTypeNotFoundException.class)
-    public ResponseEntity<ErrorResource> handleDocumentTypeNotFound(DocumentTypeNotFoundException ex) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new ErrorResource("document_type_not_found", "Document type not found", ex.getMessage()));
+    public ResponseEntity<Map<String, String>> handleDocumentTypeNotFound(DocumentTypeNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "document_type_not_found"));
     }
 
     @ExceptionHandler(DuplicateGuestException.class)
-    public ResponseEntity<ErrorResource> handleDuplicateGuest(DuplicateGuestException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(new ErrorResource("duplicate_document", "A guest with this document already exists", ex.getMessage()));
+    public ResponseEntity<Map<String, Object>> handleDuplicateGuest(DuplicateGuestException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "error", "duplicate_document",
+                "documentTypeId", ex.getDocumentTypeId(),
+                "documentNumber", ex.getDocumentNumber()));
+    }
+
+    @ExceptionHandler(InvalidDocumentNumberException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidDocumentNumber(InvalidDocumentNumberException ex) {
+        return ResponseEntity.badRequest().body(Map.of("error", "invalid_document_number", "message", ex.getMessage()));
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleUserNotFound(UserNotFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "user_not_found"));
+    }
+
+    @ExceptionHandler(UserAlreadyLinkedException.class)
+    public ResponseEntity<Map<String, String>> handleUserAlreadyLinked(UserAlreadyLinkedException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "user_already_linked"));
     }
 
     /**
