@@ -8,10 +8,10 @@ import com.swissotel.swissotel360.iam.domain.model.queries.GetUserByPublicIdQuer
 import java.util.Optional;
 
 public interface UserQueryService {
-    Optional<User> handle(GetUserByIdQuery query);
+	Optional<User> handle(GetUserByIdQuery query);
 
-    Optional<User> handle(GetUserByEmailQuery query);
+	Optional<User> handle(GetUserByEmailQuery query);
 
-    Optional<User> handle(GetUserByPublicIdQuery query);
+	Optional<User> handle(GetUserByPublicIdQuery query);
 
 }

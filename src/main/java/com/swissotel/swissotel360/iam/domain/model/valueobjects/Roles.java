@@ -7,9 +7,5 @@ package com.swissotel.swissotel360.iam.domain.model.valueobjects;
  * </p>
  */
 public enum Roles {
-    ROLE_SUPER_ADMIN,
-    ROLE_MANAGER,
-    ROLE_RECEPTIONIST,
-    ROLE_HOUSEKEEPING,
-    ROLE_GUEST
+	ROLE_SUPER_ADMIN, ROLE_MANAGER, ROLE_RECEPTIONIST, ROLE_HOUSEKEEPING, ROLE_GUEST
 }

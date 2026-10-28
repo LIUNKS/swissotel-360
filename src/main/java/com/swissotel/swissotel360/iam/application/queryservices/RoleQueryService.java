@@ -10,11 +10,12 @@ import java.util.Optional;
  */
 public interface RoleQueryService {
 
-    /**
-     * Handles retrieval of a role by name.
-     *
-     * @param query role-name query
-     * @return matching role, if found
-     */
-    Optional<Role> handle(GetRoleByNameQuery query);
+	/**
+	 * Handles retrieval of a role by name.
+	 *
+	 * @param query
+	 *                  role-name query
+	 * @return matching role, if found
+	 */
+	Optional<Role> handle(GetRoleByNameQuery query);
 }

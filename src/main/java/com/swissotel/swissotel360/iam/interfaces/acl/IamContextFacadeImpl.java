@@ -18,39 +18,39 @@ import java.util.UUID;
  */
 @Service
 public class IamContextFacadeImpl implements IamContextFacade {
-    private final UserCommandService userCommandService;
-    private final UserQueryService userQueryService;
+	private final UserCommandService userCommandService;
+	private final UserQueryService userQueryService;
 
-    public IamContextFacadeImpl(UserCommandService userCommandService, UserQueryService userQueryService) {
-        this.userCommandService = userCommandService;
-        this.userQueryService = userQueryService;
-    }
+	public IamContextFacadeImpl(UserCommandService userCommandService, UserQueryService userQueryService) {
+		this.userCommandService = userCommandService;
+		this.userQueryService = userQueryService;
+	}
 
-    @Override
-    public Long createUser(String fullName, String email, String password) {
-        var signUpCommand = new SignUpCommand(fullName, email, password, Roles.ROLE_GUEST);
-        var result = userCommandService.handle(signUpCommand);
-        return result.toOptional().map(User::getId).orElse(0L);
-    }
+	@Override
+	public Long createUser(String fullName, String email, String password) {
+		var signUpCommand = new SignUpCommand(fullName, email, password, Roles.ROLE_GUEST);
+		var result = userCommandService.handle(signUpCommand);
+		return result.toOptional().map(User::getId).orElse(0L);
+	}
 
-    @Override
-    public Long fetchUserIdByEmail(String email) {
-        var getUserByEmailQuery = new GetUserByEmailQuery(email);
-        return userQueryService.handle(getUserByEmailQuery)
-                .map(User::getId)
-                .orElse(0L);
-    }
+	@Override
+	public Long fetchUserIdByEmail(String email) {
+		var getUserByEmailQuery = new GetUserByEmailQuery(email);
+		return userQueryService.handle(getUserByEmailQuery)
+				.map(User::getId)
+				.orElse(0L);
+	}
 
-    @Override
-    public String fetchEmailByUserId(Long userId) {
-        var getUserByIdQuery = new GetUserByIdQuery(userId);
-        return userQueryService.handle(getUserByIdQuery)
-                .map(User::getEmail)
-                .orElse(StringUtils.EMPTY);
-    }
+	@Override
+	public String fetchEmailByUserId(Long userId) {
+		var getUserByIdQuery = new GetUserByIdQuery(userId);
+		return userQueryService.handle(getUserByIdQuery)
+				.map(User::getEmail)
+				.orElse(StringUtils.EMPTY);
+	}
 
-    @Override
-    public Optional<Long> fetchUserIdByPublicId(UUID userPublicId) {
-        return userQueryService.handle(new GetUserByPublicIdQuery(userPublicId)).map(User::getId);
-    }
+	@Override
+	public Optional<Long> fetchUserIdByPublicId(UUID userPublicId) {
+		return userQueryService.handle(new GetUserByPublicIdQuery(userPublicId)).map(User::getId);
+	}
 }

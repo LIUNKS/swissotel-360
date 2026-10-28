@@ -10,11 +10,11 @@ import java.util.Optional;
  * IAM role repository port.
  */
 public interface RoleRepository {
-    Optional<Role> findByName(Roles name);
+	Optional<Role> findByName(Roles name);
 
-    List<Role> findAll();
+	List<Role> findAll();
 
-    Role save(Role role);
+	Role save(Role role);
 
-    boolean existsByName(Roles name);
+	boolean existsByName(Roles name);
 }

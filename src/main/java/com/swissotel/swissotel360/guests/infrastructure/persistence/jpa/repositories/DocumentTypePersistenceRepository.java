@@ -3,4 +3,5 @@ package com.swissotel.swissotel360.guests.infrastructure.persistence.jpa.reposit
 import com.swissotel.swissotel360.guests.infrastructure.persistence.jpa.entities.DocumentTypePersistenceEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface DocumentTypePersistenceRepository extends JpaRepository<DocumentTypePersistenceEntity, Long> { }
+public interface DocumentTypePersistenceRepository extends JpaRepository<DocumentTypePersistenceEntity, Long> {
+}

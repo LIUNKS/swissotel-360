@@ -13,14 +13,14 @@ import java.util.Optional;
  */
 @Service
 public class RoleQueryServiceImpl implements RoleQueryService {
-    private final RoleRepository roleRepository;
+	private final RoleRepository roleRepository;
 
-    public RoleQueryServiceImpl(RoleRepository roleRepository) {
-        this.roleRepository = roleRepository;
-    }
+	public RoleQueryServiceImpl(RoleRepository roleRepository) {
+		this.roleRepository = roleRepository;
+	}
 
-    @Override
-    public Optional<Role> handle(GetRoleByNameQuery query) {
-        return roleRepository.findByName(query.name());
-    }
+	@Override
+	public Optional<Role> handle(GetRoleByNameQuery query) {
+		return roleRepository.findByName(query.name());
+	}
 }

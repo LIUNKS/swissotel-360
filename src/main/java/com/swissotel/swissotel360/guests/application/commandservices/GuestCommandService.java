@@ -6,7 +6,9 @@ import com.swissotel.swissotel360.guests.domain.model.commands.UpdateGuestComman
 import com.swissotel.swissotel360.guests.domain.model.commands.LinkGuestAccountCommand;
 
 public interface GuestCommandService {
-    Guest create(CreateGuestCommand command);
-    Guest update(UpdateGuestCommand command);
-    Guest linkUserAccount(LinkGuestAccountCommand command);
+	Guest create(CreateGuestCommand command);
+
+	Guest update(UpdateGuestCommand command);
+
+	Guest linkUserAccount(LinkGuestAccountCommand command);
 }

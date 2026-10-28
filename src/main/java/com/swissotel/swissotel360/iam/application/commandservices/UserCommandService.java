@@ -8,7 +8,7 @@ import com.swissotel.swissotel360.shared.application.result.Result;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 
 public interface UserCommandService {
-    Result<User, ApplicationError> handle(SignUpCommand command);
+	Result<User, ApplicationError> handle(SignUpCommand command);
 
-    Result<ImmutablePair<User, String>, ApplicationError> handle(SignInCommand command);
+	Result<ImmutablePair<User, String>, ApplicationError> handle(SignInCommand command);
 }

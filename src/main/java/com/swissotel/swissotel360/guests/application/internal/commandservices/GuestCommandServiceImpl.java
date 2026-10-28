@@ -19,52 +19,54 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class GuestCommandServiceImpl implements GuestCommandService {
-    private final GuestRepository guestRepository;
-    private final DocumentTypeRepository documentTypeRepository;
-    private final IamGuestAccountOutboundService iamGuestAccountOutboundService;
+	private final GuestRepository guestRepository;
+	private final DocumentTypeRepository documentTypeRepository;
+	private final IamGuestAccountOutboundService iamGuestAccountOutboundService;
 
-    public GuestCommandServiceImpl(GuestRepository guestRepository, DocumentTypeRepository documentTypeRepository,
-            IamGuestAccountOutboundService iamGuestAccountOutboundService) {
-        this.guestRepository = guestRepository;
-        this.documentTypeRepository = documentTypeRepository;
-        this.iamGuestAccountOutboundService = iamGuestAccountOutboundService;
-    }
+	public GuestCommandServiceImpl(GuestRepository guestRepository, DocumentTypeRepository documentTypeRepository,
+			IamGuestAccountOutboundService iamGuestAccountOutboundService) {
+		this.guestRepository = guestRepository;
+		this.documentTypeRepository = documentTypeRepository;
+		this.iamGuestAccountOutboundService = iamGuestAccountOutboundService;
+	}
 
-    @Override
-    @Transactional
-    public Guest create(CreateGuestCommand command) {
-        var documentType = documentTypeRepository.findById(command.documentTypeId())
-                .orElseThrow(() -> new DocumentTypeNotFoundException(command.documentTypeId()));
-        var identityDocument = new IdentityDocumentNumber(documentType.code(), command.documentNumber());
-        var number = identityDocument.value();
-        if (guestRepository.existsByDocument(command.documentTypeId(), number)) {
-            throw new DuplicateGuestException(command.documentTypeId(), number);
-        }
-        var guest = new Guest(null, null, null, documentType.id(), documentType.code(), number,
-                command.firstName(), command.lastName(), command.email(), command.phone(), command.countryOfOrigin(), null);
-        return guestRepository.save(guest);
-    }
+	@Override
+	@Transactional
+	public Guest create(CreateGuestCommand command) {
+		var documentType = documentTypeRepository.findById(command.documentTypeId())
+				.orElseThrow(() -> new DocumentTypeNotFoundException(command.documentTypeId()));
+		var identityDocument = new IdentityDocumentNumber(documentType.code(), command.documentNumber());
+		var number = identityDocument.value();
+		if (guestRepository.existsByDocument(command.documentTypeId(), number)) {
+			throw new DuplicateGuestException(command.documentTypeId(), number);
+		}
+		var guest = new Guest(null, null, null, documentType.id(), documentType.code(), number,
+				command.firstName(), command.lastName(), command.email(), command.phone(), command.countryOfOrigin(),
+				null);
+		return guestRepository.save(guest);
+	}
 
-    @Override
-    @Transactional
-    public Guest update(UpdateGuestCommand command) {
-        var guest = guestRepository.findByPublicId(command.publicId())
-                .orElseThrow(() -> new GuestNotFoundException(command.publicId().toString()));
-        guest.updateProfile(command.firstName(), command.lastName(), command.email(), command.phone(), command.countryOfOrigin());
-        return guestRepository.save(guest);
-    }
+	@Override
+	@Transactional
+	public Guest update(UpdateGuestCommand command) {
+		var guest = guestRepository.findByPublicId(command.publicId())
+				.orElseThrow(() -> new GuestNotFoundException(command.publicId().toString()));
+		guest.updateProfile(command.firstName(), command.lastName(), command.email(), command.phone(),
+				command.countryOfOrigin());
+		return guestRepository.save(guest);
+	}
 
-    @Override
-    @Transactional
-    public Guest linkUserAccount(LinkGuestAccountCommand command) {
-        var guest = guestRepository.findByPublicId(command.guestPublicId())
-                .orElseThrow(() -> new GuestNotFoundException(command.guestPublicId().toString()));
-        var userId = iamGuestAccountOutboundService.fetchInternalUserId(command.userPublicId())
-                .orElseThrow(() -> new UserNotFoundException(command.userPublicId()));
-        if (guest.getUserId() != null || guestRepository.existsByUserId(userId)) {
-            throw new UserAlreadyLinkedException();
-        }
-        guest.linkUserAccount(userId);
-        return guestRepository.save(guest);
-    }
+	@Override
+	@Transactional
+	public Guest linkUserAccount(LinkGuestAccountCommand command) {
+		var guest = guestRepository.findByPublicId(command.guestPublicId())
+				.orElseThrow(() -> new GuestNotFoundException(command.guestPublicId().toString()));
+		var userId = iamGuestAccountOutboundService.fetchInternalUserId(command.userPublicId())
+				.orElseThrow(() -> new UserNotFoundException(command.userPublicId()));
+		if (guest.getUserId() != null || guestRepository.existsByUserId(userId)) {
+			throw new UserAlreadyLinkedException();
+		}
+		guest.linkUserAccount(userId);
+		return guestRepository.save(guest);
+	}
 }

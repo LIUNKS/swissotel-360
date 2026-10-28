@@ -14,12 +14,11 @@ import java.util.Locale;
 @Configuration
 public class LocaleConfiguration {
 
-    @Bean
-    public LocaleResolver localeResolver() {
-        var resolver = new AcceptHeaderLocaleResolver();
-        resolver.setDefaultLocale(Locale.ENGLISH);
-        resolver.setSupportedLocales(List.of(Locale.ENGLISH, Locale.forLanguageTag("es")));
-        return resolver;
-    }
+	@Bean
+	public LocaleResolver localeResolver() {
+		var resolver = new AcceptHeaderLocaleResolver();
+		resolver.setDefaultLocale(Locale.ENGLISH);
+		resolver.setSupportedLocales(List.of(Locale.ENGLISH, Locale.forLanguageTag("es")));
+		return resolver;
+	}
 }
-

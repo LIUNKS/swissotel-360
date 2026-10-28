@@ -6,9 +6,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface UserPersistenceRepository extends JpaRepository<UserPersistenceEntity, Long> {
-    Optional<UserPersistenceEntity> findByEmail(String email);
+	Optional<UserPersistenceEntity> findByEmail(String email);
 
-    Optional<UserPersistenceEntity> findByPublicId(UUID publicId);
+	Optional<UserPersistenceEntity> findByPublicId(UUID publicId);
 
-    boolean existsByEmail(String email);
+	boolean existsByEmail(String email);
 }

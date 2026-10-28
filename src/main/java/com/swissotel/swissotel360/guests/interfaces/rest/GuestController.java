@@ -29,74 +29,96 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping({"/api/v1/guests", "/api/guests"})
+@RequestMapping({ "/api/v1/guests", "/api/guests" })
 @Tag(name = "Guests", description = "Guest identity and profile management")
 public class GuestController {
-    private final GuestCommandService commandService;
-    private final GuestQueryService queryService;
+	private final GuestCommandService commandService;
+	private final GuestQueryService queryService;
 
-    public GuestController(GuestCommandService commandService, GuestQueryService queryService) {
-        this.commandService = commandService;
-        this.queryService = queryService;
-    }
+	public GuestController(GuestCommandService commandService, GuestQueryService queryService) {
+		this.commandService = commandService;
+		this.queryService = queryService;
+	}
 
-    @GetMapping
-    @PreAuthorize("hasAuthority('guests.view')")
-    @Operation(summary = "Search guests", security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "Paged guest results"), @ApiResponse(responseCode = "403", description = "Permission denied")})
-    public ResponseEntity<?> search(@RequestParam(required = false) String q,
-            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
-        var query = new SearchGuestsQuery(q, page, size);
-        var result = queryService.search(query.query(), query.page(), query.size());
-        var content = result.content().stream().map(GuestResource::from).toList();
-        return ResponseEntity.ok(new PageImpl<>(content, PageRequest.of(page, size), result.totalElements()));
-    }
+	@GetMapping
+	@PreAuthorize("hasAuthority('guests.view')")
+	@Operation(summary = "Search guests", security = @SecurityRequirement(name = "bearerAuth"))
+	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Paged guest results"),
+			@ApiResponse(responseCode = "403", description = "Permission denied") })
+	public ResponseEntity<?> search(@RequestParam(required = false) String q,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
+		var query = new SearchGuestsQuery(q, page, size);
+		var result = queryService.search(query.query(), query.page(), query.size());
+		var content = result.content().stream().map(GuestResource::from).toList();
+		return ResponseEntity.ok(new PageImpl<>(content, PageRequest.of(page, size), result.totalElements()));
+	}
 
-    @GetMapping("/lookup")
-    @PreAuthorize("hasAuthority('guests.view')")
-    @Operation(summary = "Find guest by identity document", security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "Guest found", content = @Content(schema = @Schema(implementation = GuestResource.class))), @ApiResponse(responseCode = "404", description = "Guest not found"), @ApiResponse(responseCode = "403", description = "Permission denied")})
-    public ResponseEntity<GuestResource> lookup(@RequestParam Long documentTypeId, @RequestParam String documentNumber) {
-        var query = new FindGuestByDocumentQuery(documentTypeId, documentNumber);
-        return ResponseEntity.ok(GuestResource.from(queryService.findByDocument(query.documentTypeId(), query.documentNumber())));
-    }
+	@GetMapping("/lookup")
+	@PreAuthorize("hasAuthority('guests.view')")
+	@Operation(summary = "Find guest by identity document", security = @SecurityRequirement(name = "bearerAuth"))
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Guest found", content = @Content(schema = @Schema(implementation = GuestResource.class))),
+			@ApiResponse(responseCode = "404", description = "Guest not found"),
+			@ApiResponse(responseCode = "403", description = "Permission denied") })
+	public ResponseEntity<GuestResource> lookup(@RequestParam Long documentTypeId,
+			@RequestParam String documentNumber) {
+		var query = new FindGuestByDocumentQuery(documentTypeId, documentNumber);
+		return ResponseEntity
+				.ok(GuestResource.from(queryService.findByDocument(query.documentTypeId(), query.documentNumber())));
+	}
 
-    @GetMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('guests.view')")
-    @Operation(summary = "Get guest by public identifier", security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "Guest found", content = @Content(schema = @Schema(implementation = GuestResource.class))), @ApiResponse(responseCode = "404", description = "Guest not found"), @ApiResponse(responseCode = "403", description = "Permission denied")})
-    public ResponseEntity<GuestResource> getOne(@PathVariable UUID publicId) {
-        return ResponseEntity.ok(GuestResource.from(queryService.getByPublicId(new GetGuestByPublicIdQuery(publicId).publicId())));
-    }
+	@GetMapping("/{publicId}")
+	@PreAuthorize("hasAuthority('guests.view')")
+	@Operation(summary = "Get guest by public identifier", security = @SecurityRequirement(name = "bearerAuth"))
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Guest found", content = @Content(schema = @Schema(implementation = GuestResource.class))),
+			@ApiResponse(responseCode = "404", description = "Guest not found"),
+			@ApiResponse(responseCode = "403", description = "Permission denied") })
+	public ResponseEntity<GuestResource> getOne(@PathVariable UUID publicId) {
+		return ResponseEntity
+				.ok(GuestResource.from(queryService.getByPublicId(new GetGuestByPublicIdQuery(publicId).publicId())));
+	}
 
-    @PostMapping
-    @PreAuthorize("hasAuthority('guests.manage')")
-    @Operation(summary = "Create guest", security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponses({@ApiResponse(responseCode = "201", description = "Guest created", content = @Content(schema = @Schema(implementation = GuestResource.class))), @ApiResponse(responseCode = "400", description = "Invalid input"), @ApiResponse(responseCode = "404", description = "Document type not found"), @ApiResponse(responseCode = "409", description = "Duplicate document"), @ApiResponse(responseCode = "403", description = "Permission denied")})
-    public ResponseEntity<GuestResource> create(@Valid @RequestBody CreateGuestResource resource) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(GuestResource.from(commandService.create(CreateGuestCommandAssembler.toCommand(resource))));
-    }
+	@PostMapping
+	@PreAuthorize("hasAuthority('guests.manage')")
+	@Operation(summary = "Create guest", security = @SecurityRequirement(name = "bearerAuth"))
+	@ApiResponses({
+			@ApiResponse(responseCode = "201", description = "Guest created", content = @Content(schema = @Schema(implementation = GuestResource.class))),
+			@ApiResponse(responseCode = "400", description = "Invalid input"),
+			@ApiResponse(responseCode = "404", description = "Document type not found"),
+			@ApiResponse(responseCode = "409", description = "Duplicate document"),
+			@ApiResponse(responseCode = "403", description = "Permission denied") })
+	public ResponseEntity<GuestResource> create(@Valid @RequestBody CreateGuestResource resource) {
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body(GuestResource.from(commandService.create(CreateGuestCommandAssembler.toCommand(resource))));
+	}
 
-    @PutMapping("/{publicId}")
-    @PreAuthorize("hasAuthority('guests.manage')")
-    @Operation(summary = "Update guest profile", security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponses({@ApiResponse(responseCode = "200", description = "Guest updated", content = @Content(schema = @Schema(implementation = GuestResource.class))), @ApiResponse(responseCode = "400", description = "Invalid input"), @ApiResponse(responseCode = "404", description = "Guest not found"), @ApiResponse(responseCode = "403", description = "Permission denied")})
-    public ResponseEntity<GuestResource> update(@PathVariable UUID publicId, @Valid @RequestBody UpdateGuestResource resource) {
-        return ResponseEntity.ok(GuestResource.from(commandService.update(GuestCommandAssembler.toCommand(publicId, resource))));
-    }
+	@PutMapping("/{publicId}")
+	@PreAuthorize("hasAuthority('guests.manage')")
+	@Operation(summary = "Update guest profile", security = @SecurityRequirement(name = "bearerAuth"))
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "Guest updated", content = @Content(schema = @Schema(implementation = GuestResource.class))),
+			@ApiResponse(responseCode = "400", description = "Invalid input"),
+			@ApiResponse(responseCode = "404", description = "Guest not found"),
+			@ApiResponse(responseCode = "403", description = "Permission denied") })
+	public ResponseEntity<GuestResource> update(@PathVariable UUID publicId,
+			@Valid @RequestBody UpdateGuestResource resource) {
+		return ResponseEntity
+				.ok(GuestResource.from(commandService.update(GuestCommandAssembler.toCommand(publicId, resource))));
+	}
 
-    @PostMapping("/{guestPublicId}/link-account")
-    @PreAuthorize("hasAuthority('guests.manage')")
-    @Operation(summary = "Link an IAM account to a guest", security = @SecurityRequirement(name = "bearerAuth"))
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "IAM account linked", content = @Content(schema = @Schema(implementation = GuestResource.class))),
-            @ApiResponse(responseCode = "404", description = "Guest or IAM user not found"),
-            @ApiResponse(responseCode = "409", description = "IAM account already linked to a guest"),
-            @ApiResponse(responseCode = "403", description = "Permission denied")
-    })
-    public ResponseEntity<GuestResource> linkAccount(@PathVariable UUID guestPublicId,
-            @Valid @RequestBody LinkGuestAccountResource resource) {
-        var command = new LinkGuestAccountCommand(guestPublicId, resource.userPublicId());
-        return ResponseEntity.ok(GuestResource.from(commandService.linkUserAccount(command)));
-    }
+	@PostMapping("/{guestPublicId}/link-account")
+	@PreAuthorize("hasAuthority('guests.manage')")
+	@Operation(summary = "Link an IAM account to a guest", security = @SecurityRequirement(name = "bearerAuth"))
+	@ApiResponses({
+			@ApiResponse(responseCode = "200", description = "IAM account linked", content = @Content(schema = @Schema(implementation = GuestResource.class))),
+			@ApiResponse(responseCode = "404", description = "Guest or IAM user not found"),
+			@ApiResponse(responseCode = "409", description = "IAM account already linked to a guest"),
+			@ApiResponse(responseCode = "403", description = "Permission denied")
+	})
+	public ResponseEntity<GuestResource> linkAccount(@PathVariable UUID guestPublicId,
+			@Valid @RequestBody LinkGuestAccountResource resource) {
+		var command = new LinkGuestAccountCommand(guestPublicId, resource.userPublicId());
+		return ResponseEntity.ok(GuestResource.from(commandService.linkUserAccount(command)));
+	}
 }

@@ -5,21 +5,21 @@ import com.swissotel.swissotel360.iam.infrastructure.persistence.jpa.entities.Ro
 import com.swissotel.swissotel360.iam.domain.model.valueobjects.Roles;
 
 public class RolePersistenceAssembler {
-    public static RolePersistenceEntity toPersistenceEntity(Role role) {
-        if (role == null)
-            return null;
-        var entity = new RolePersistenceEntity();
-        if (role.getId() != null)
-            entity.setId(role.getId());
-        entity.setName(role.getName());
-        return entity;
-    }
+	public static RolePersistenceEntity toPersistenceEntity(Role role) {
+		if (role == null)
+			return null;
+		var entity = new RolePersistenceEntity();
+		if (role.getId() != null)
+			entity.setId(role.getId());
+		entity.setName(role.getName());
+		return entity;
+	}
 
-    public static Role toDomainEntity(RolePersistenceEntity entity) {
-        if (entity == null)
-            return null;
-        var role = new Role(Roles.valueOf(entity.getName().name()));
-        role.setId(entity.getId());
-        return role;
-    }
+	public static Role toDomainEntity(RolePersistenceEntity entity) {
+		if (entity == null)
+			return null;
+		var role = new Role(Roles.valueOf(entity.getName().name()));
+		role.setId(entity.getId());
+		return role;
+	}
 }

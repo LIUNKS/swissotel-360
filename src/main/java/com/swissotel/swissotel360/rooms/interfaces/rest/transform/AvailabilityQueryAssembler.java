@@ -6,13 +6,14 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public final class AvailabilityQueryAssembler {
-    private AvailabilityQueryAssembler() { }
+	private AvailabilityQueryAssembler() {
+	}
 
-    public static AvailabilitySearch toSearch(LocalDate checkIn, LocalDate checkOut, Integer guests) {
-        return new AvailabilitySearch(checkIn, checkOut, guests);
-    }
+	public static AvailabilitySearch toSearch(LocalDate checkIn, LocalDate checkOut, Integer guests) {
+		return new AvailabilitySearch(checkIn, checkOut, guests);
+	}
 
-    public static QuoteRoomTypeQuery toQuote(UUID roomTypePublicId, LocalDate checkIn, LocalDate checkOut) {
-        return new QuoteRoomTypeQuery(roomTypePublicId, checkIn, checkOut);
-    }
+	public static QuoteRoomTypeQuery toQuote(UUID roomTypePublicId, LocalDate checkIn, LocalDate checkOut) {
+		return new QuoteRoomTypeQuery(roomTypePublicId, checkIn, checkOut);
+	}
 }

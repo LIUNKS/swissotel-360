@@ -7,9 +7,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public record SignUpCommand(
-        @NotBlank @Size(max = 120) String fullName, 
-        @NotBlank @Size(max = 150) String email, 
-        @NotBlank @Size(min = 6, max = 120) String password, 
-        @NotNull Roles role
-) {
+		@NotBlank @Size(max = 120) String fullName,
+		@NotBlank @Size(max = 150) String email,
+		@NotBlank @Size(min = 6, max = 120) String password,
+		@NotNull Roles role) {
 }
