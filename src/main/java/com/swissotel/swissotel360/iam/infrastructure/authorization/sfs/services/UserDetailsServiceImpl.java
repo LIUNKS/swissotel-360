@@ -10,18 +10,18 @@ import org.springframework.stereotype.Service;
 
 @Service("defaultUserDetailsService")
 public class UserDetailsServiceImpl implements UserDetailsService {
-    private final UserRepository userRepository;
-    private final UserAuthoritiesJdbcRepository authoritiesRepository;
+	private final UserRepository userRepository;
+	private final UserAuthoritiesJdbcRepository authoritiesRepository;
 
-    public UserDetailsServiceImpl(UserRepository userRepository, UserAuthoritiesJdbcRepository authoritiesRepository) {
-        this.userRepository = userRepository;
-        this.authoritiesRepository = authoritiesRepository;
-    }
+	public UserDetailsServiceImpl(UserRepository userRepository, UserAuthoritiesJdbcRepository authoritiesRepository) {
+		this.userRepository = userRepository;
+		this.authoritiesRepository = authoritiesRepository;
+	}
 
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        var user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
-        return UserDetailsImpl.build(user, authoritiesRepository.findPermissionsByRoleId(user.getRole().getId()));
-    }
+	@Override
+	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+		var user = userRepository.findByEmail(email)
+				.orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
+		return UserDetailsImpl.build(user, authoritiesRepository.findPermissionsByRoleId(user.getRole().getId()));
+	}
 }

@@ -1,0 +1,7 @@
+{
+    "[java]": {
+        "editor.defaultFormatter": "redhat.java"
+    },
+    "java.format.settings.url": "${workspaceFolder}/.vscode/eclipse-formatter.xml",
+    "java.format.settings.profile": "Eclipse"
+}

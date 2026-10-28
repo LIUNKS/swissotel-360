@@ -17,30 +17,30 @@ import java.util.Optional;
 @Repository
 public class RoleRepositoryImpl implements RoleRepository {
 
-    private final RolePersistenceRepository rolePersistenceRepository;
+	private final RolePersistenceRepository rolePersistenceRepository;
 
-    public RoleRepositoryImpl(RolePersistenceRepository rolePersistenceRepository) {
-        this.rolePersistenceRepository = rolePersistenceRepository;
-    }
+	public RoleRepositoryImpl(RolePersistenceRepository rolePersistenceRepository) {
+		this.rolePersistenceRepository = rolePersistenceRepository;
+	}
 
-    @Override
-    public Optional<Role> findByName(Roles name) {
-        return rolePersistenceRepository.findByName(name).map(RolePersistenceAssembler::toDomainEntity);
-    }
+	@Override
+	public Optional<Role> findByName(Roles name) {
+		return rolePersistenceRepository.findByName(name).map(RolePersistenceAssembler::toDomainEntity);
+	}
 
-    @Override
-    public List<Role> findAll() {
-        return rolePersistenceRepository.findAll().stream().map(RolePersistenceAssembler::toDomainEntity).toList();
-    }
+	@Override
+	public List<Role> findAll() {
+		return rolePersistenceRepository.findAll().stream().map(RolePersistenceAssembler::toDomainEntity).toList();
+	}
 
-    @Override
-    public Role save(Role role) {
-        var saved = rolePersistenceRepository.save(RolePersistenceAssembler.toPersistenceEntity(role));
-        return RolePersistenceAssembler.toDomainEntity(saved);
-    }
+	@Override
+	public Role save(Role role) {
+		var saved = rolePersistenceRepository.save(RolePersistenceAssembler.toPersistenceEntity(role));
+		return RolePersistenceAssembler.toDomainEntity(saved);
+	}
 
-    @Override
-    public boolean existsByName(Roles name) {
-        return rolePersistenceRepository.existsByName(name);
-    }
+	@Override
+	public boolean existsByName(Roles name) {
+		return rolePersistenceRepository.existsByName(name);
+	}
 }

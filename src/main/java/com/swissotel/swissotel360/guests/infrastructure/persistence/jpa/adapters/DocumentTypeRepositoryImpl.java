@@ -9,21 +9,28 @@ import java.util.Optional;
 
 @Repository
 public class DocumentTypeRepositoryImpl implements DocumentTypeRepository {
-    private final DocumentTypePersistenceRepository repository;
-    public DocumentTypeRepositoryImpl(DocumentTypePersistenceRepository repository) { this.repository = repository; }
+	private final DocumentTypePersistenceRepository repository;
 
-    @Override
-    public Optional<DocumentType> findById(Long id) {
-        return repository.findById(id).map(entity -> new DocumentType(entity.getId(), entity.getCode(), entity.getName(), entity.isHasCheckDigit()));
-    }
+	public DocumentTypeRepositoryImpl(DocumentTypePersistenceRepository repository) {
+		this.repository = repository;
+	}
 
-    @Override
-    public List<DocumentType> findAll() {
-        return repository.findAll(SortByCode.INSTANCE).stream()
-                .map(entity -> new DocumentType(entity.getId(), entity.getCode(), entity.getName(), entity.isHasCheckDigit())).toList();
-    }
+	@Override
+	public Optional<DocumentType> findById(Long id) {
+		return repository.findById(id).map(entity -> new DocumentType(entity.getId(), entity.getCode(),
+				entity.getName(), entity.isHasCheckDigit()));
+	}
 
-    private static final class SortByCode {
-        private static final org.springframework.data.domain.Sort INSTANCE = org.springframework.data.domain.Sort.by("code").ascending();
-    }
+	@Override
+	public List<DocumentType> findAll() {
+		return repository.findAll(SortByCode.INSTANCE).stream()
+				.map(entity -> new DocumentType(entity.getId(), entity.getCode(), entity.getName(),
+						entity.isHasCheckDigit()))
+				.toList();
+	}
+
+	private static final class SortByCode {
+		private static final org.springframework.data.domain.Sort INSTANCE = org.springframework.data.domain.Sort
+				.by("code").ascending();
+	}
 }

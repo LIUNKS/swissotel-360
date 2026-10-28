@@ -6,4 +6,5 @@ import java.util.UUID;
 
 @Schema(name = "LinkGuestAccountRequest", description = "IAM account to associate with an existing guest")
 public record LinkGuestAccountResource(
-        @Schema(example = "b1398429-d78b-4f7b-be43-bb3fd351bc68") @NotNull UUID userPublicId) { }
+		@Schema(example = "b1398429-d78b-4f7b-be43-bb3fd351bc68") @NotNull UUID userPublicId) {
+}

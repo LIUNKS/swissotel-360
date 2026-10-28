@@ -1,4 +1,5 @@
 package com.swissotel.swissotel360.rooms.application.internal.queryservices;
+
 import com.swissotel.swissotel360.rooms.application.queryservices.RoomQueryService;
 import com.swissotel.swissotel360.rooms.application.queryservices.RoomView;
 import com.swissotel.swissotel360.rooms.application.queryservices.RoomPageView;
@@ -8,10 +9,28 @@ import com.swissotel.swissotel360.rooms.domain.model.queries.RoomFilter;
 import com.swissotel.swissotel360.rooms.domain.model.queries.GetRoomByPublicIdQuery;
 import com.swissotel.swissotel360.rooms.domain.repositories.RoomRepository;
 import com.swissotel.swissotel360.rooms.domain.repositories.RoomTypeRepository;
+
 public class RoomQueryServiceImpl implements RoomQueryService {
-    private final RoomRepository rooms; private final RoomTypeRepository roomTypes;
-    public RoomQueryServiceImpl(RoomRepository rooms,RoomTypeRepository roomTypes) { this.rooms=rooms; this.roomTypes=roomTypes; }
-    public RoomPageView find(RoomFilter filter) { var page=rooms.find(filter); return new RoomPageView(page.content().stream().map(this::toView).toList(),page.totalElements()); }
-    public RoomView findByPublicId(GetRoomByPublicIdQuery query) { var id=query.publicId(); return toView(rooms.findByPublicId(id).orElseThrow(()->new RoomNotFoundException(id))); }
-    private RoomView toView(Room room) { var type=roomTypes.findById(room.roomTypeId()).orElseThrow(); return new RoomView(room,type.publicId(),type.name()); }
+	private final RoomRepository rooms;
+	private final RoomTypeRepository roomTypes;
+
+	public RoomQueryServiceImpl(RoomRepository rooms, RoomTypeRepository roomTypes) {
+		this.rooms = rooms;
+		this.roomTypes = roomTypes;
+	}
+
+	public RoomPageView find(RoomFilter filter) {
+		var page = rooms.find(filter);
+		return new RoomPageView(page.content().stream().map(this::toView).toList(), page.totalElements());
+	}
+
+	public RoomView findByPublicId(GetRoomByPublicIdQuery query) {
+		var id = query.publicId();
+		return toView(rooms.findByPublicId(id).orElseThrow(() -> new RoomNotFoundException(id)));
+	}
+
+	private RoomView toView(Room room) {
+		var type = roomTypes.findById(room.roomTypeId()).orElseThrow();
+		return new RoomView(room, type.publicId(), type.name());
+	}
 }

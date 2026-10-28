@@ -5,21 +5,24 @@ package com.swissotel.swissotel360.iam.application.internal.outboundservices.has
  * layer.
  */
 public interface HashingService {
-    /**
-     * Encodes a raw password for persistence.
-     *
-     * @param rawPassword raw password value
-     * @return encoded password representation
-     */
-    String encode(CharSequence rawPassword);
+	/**
+	 * Encodes a raw password for persistence.
+	 *
+	 * @param rawPassword
+	 *                        raw password value
+	 * @return encoded password representation
+	 */
+	String encode(CharSequence rawPassword);
 
-    /**
-     * Verifies whether a raw password matches an encoded password.
-     *
-     * @param rawPassword     raw password value
-     * @param encodedPassword encoded password representation
-     * @return {@code true} when both values match; otherwise {@code false}
-     */
-    boolean matches(CharSequence rawPassword, String encodedPassword);
+	/**
+	 * Verifies whether a raw password matches an encoded password.
+	 *
+	 * @param rawPassword
+	 *                            raw password value
+	 * @param encodedPassword
+	 *                            encoded password representation
+	 * @return {@code true} when both values match; otherwise {@code false}
+	 */
+	boolean matches(CharSequence rawPassword, String encodedPassword);
 
 }

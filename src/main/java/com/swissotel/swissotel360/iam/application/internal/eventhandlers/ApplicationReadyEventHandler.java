@@ -16,24 +16,25 @@ import java.time.Instant;
 @Service
 @Slf4j
 public class ApplicationReadyEventHandler {
-    private final RoleCommandService roleCommandService;
+	private final RoleCommandService roleCommandService;
 
-    public ApplicationReadyEventHandler(RoleCommandService roleCommandService) {
-        this.roleCommandService = roleCommandService;
-    }
+	public ApplicationReadyEventHandler(RoleCommandService roleCommandService) {
+		this.roleCommandService = roleCommandService;
+	}
 
-    /**
-     * Handles the Spring application-ready event and triggers role seeding
-     * verification.
-     *
-     * @param event Spring Boot readiness event
-     */
-    @EventListener
-    public void on(ApplicationReadyEvent event) {
-        var applicationName = event.getApplicationContext().getId();
-        log.info("Starting to verify if roles seeding is needed for {} at {}", applicationName, Instant.now());
-        var seedRolesCommand = new SeedRolesCommand();
-        roleCommandService.handle(seedRolesCommand);
-        log.info("Roles seeding verification finished for {} at {}", applicationName, Instant.now());
-    }
+	/**
+	 * Handles the Spring application-ready event and triggers role seeding
+	 * verification.
+	 *
+	 * @param event
+	 *                  Spring Boot readiness event
+	 */
+	@EventListener
+	public void on(ApplicationReadyEvent event) {
+		var applicationName = event.getApplicationContext().getId();
+		log.info("Starting to verify if roles seeding is needed for {} at {}", applicationName, Instant.now());
+		var seedRolesCommand = new SeedRolesCommand();
+		roleCommandService.handle(seedRolesCommand);
+		log.info("Roles seeding verification finished for {} at {}", applicationName, Instant.now());
+	}
 }

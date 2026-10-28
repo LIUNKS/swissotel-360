@@ -5,8 +5,9 @@ import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Bearer Token Service interface.
- * Extends the application token port and adds HTTP request extraction capabilities.
+ * Extends the application token port and adds HTTP request extraction
+ * capabilities.
  */
 public interface BearerTokenService extends TokenService {
-    String getBearerTokenFrom(HttpServletRequest request);
+	String getBearerTokenFrom(HttpServletRequest request);
 }

@@ -8,13 +8,13 @@ import java.util.UUID;
  * Domain repository port for IAM User aggregate.
  */
 public interface UserRepository {
-    Optional<User> findByEmail(String email);
+	Optional<User> findByEmail(String email);
 
-    Optional<User> findById(Long id);
+	Optional<User> findById(Long id);
 
-    Optional<User> findByPublicId(UUID publicId);
+	Optional<User> findByPublicId(UUID publicId);
 
-    User save(User user);
+	User save(User user);
 
-    boolean existsByEmail(String email);
+	boolean existsByEmail(String email);
 }
