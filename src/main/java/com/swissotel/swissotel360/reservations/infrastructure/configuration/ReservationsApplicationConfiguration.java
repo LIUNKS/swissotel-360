@@ -26,26 +26,60 @@ import java.time.ZoneId;
 @EnableScheduling
 @EnableConfigurationProperties(ReservationProperties.class)
 public class ReservationsApplicationConfiguration {
-    @Bean public Clock reservationClock() { return Clock.system(ZoneId.of("America/Lima")); }
-    @Bean public TransactionTemplate reservationTransactionTemplate(PlatformTransactionManager manager) { return new TransactionTemplate(manager); }
-    @Bean public BookingPolicy bookingPolicy(ReservationProperties p) { return new BookingPolicy(p.maxNights()); }
-    @Bean public AvailabilityPolicy availabilityPolicy() { return new AvailabilityPolicy(); }
-    @Bean public ReservationAccessPolicy reservationAccessPolicy() { return new ReservationAccessPolicy(); }
-    @Bean public ReservationCommandServiceImpl reservationCommandServiceImpl(CurrentActorPort actors,GuestDirectoryPort guests,
-            RoomInventoryPort rooms,PrepaymentPort payments,ReservationRepository repository,ReservationCodeGenerator codes,
-            BookingPolicy booking,AvailabilityPolicy availability,ReservationEventPublisher events,ReservationAccessPolicy access,
-            Clock reservationClock,ReservationProperties properties) {
-        return new ReservationCommandServiceImpl(actors,guests,rooms,payments,repository,codes,booking,availability,events,access,
-                reservationClock,Duration.ofMinutes(properties.pendingHoldMinutes()));
-    }
-    @Bean @Primary public ReservationCommandService reservationCommandService(ReservationCommandServiceImpl implementation,TransactionTemplate tx) {
-        return new TransactionalReservationCommandService(implementation,tx);
-    }
-    @Bean public ReservationQueryService reservationQueryService(ReservationRepository repository,GuestDirectoryPort guests,
-            RoomInventoryPort rooms,ReservationAccessPolicy access,ReservationProperties properties) {
-        return new ReservationQueryServiceImpl(repository,guests,rooms,access,Duration.ofMinutes(properties.pendingHoldMinutes()));
-    }
-    @Bean public ReservationFacade reservationFacade(ReservationRepository repository,ReservationCommandService commands) {
-        return new ReservationsContextFacadeImpl(repository,commands);
-    }
+	@Bean
+	public Clock reservationClock() {
+		return Clock.system(ZoneId.of("America/Lima"));
+	}
+
+	@Bean
+	public TransactionTemplate reservationTransactionTemplate(PlatformTransactionManager manager) {
+		return new TransactionTemplate(manager);
+	}
+
+	@Bean
+	public BookingPolicy bookingPolicy(ReservationProperties p) {
+		return new BookingPolicy(p.maxNights());
+	}
+
+	@Bean
+	public AvailabilityPolicy availabilityPolicy() {
+		return new AvailabilityPolicy();
+	}
+
+	@Bean
+	public ReservationAccessPolicy reservationAccessPolicy() {
+		return new ReservationAccessPolicy();
+	}
+
+	@Bean
+	public ReservationCommandServiceImpl reservationCommandServiceImpl(CurrentActorPort actors,
+			GuestDirectoryPort guests,
+			RoomInventoryPort rooms, PrepaymentPort payments, ReservationRepository repository,
+			ReservationCodeGenerator codes,
+			BookingPolicy booking, AvailabilityPolicy availability, ReservationEventPublisher events,
+			ReservationAccessPolicy access,
+			Clock reservationClock, ReservationProperties properties) {
+		return new ReservationCommandServiceImpl(actors, guests, rooms, payments, repository, codes, booking,
+				availability, events, access,
+				reservationClock, Duration.ofMinutes(properties.pendingHoldMinutes()));
+	}
+
+	@Bean
+	@Primary
+	public ReservationCommandService reservationCommandService(ReservationCommandServiceImpl implementation,
+			TransactionTemplate tx) {
+		return new TransactionalReservationCommandService(implementation, tx);
+	}
+
+	@Bean
+	public ReservationQueryService reservationQueryService(ReservationRepository repository, GuestDirectoryPort guests,
+			RoomInventoryPort rooms, ReservationAccessPolicy access, ReservationProperties properties) {
+		return new ReservationQueryServiceImpl(repository, guests, rooms, access,
+				Duration.ofMinutes(properties.pendingHoldMinutes()));
+	}
+
+	@Bean
+	public ReservationFacade reservationFacade(ReservationRepository repository, ReservationCommandService commands) {
+		return new ReservationsContextFacadeImpl(repository, commands);
+	}
 }

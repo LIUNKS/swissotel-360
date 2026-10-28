@@ -10,14 +10,23 @@ import java.util.List;
 
 @Component
 public class SpringReservationEventPublisher implements ReservationEventPublisher {
-    private final ApplicationEventPublisher publisher;
-    public SpringReservationEventPublisher(ApplicationEventPublisher publisher) { this.publisher=publisher; }
-    @Override public void publishAfterCommit(Collection<Object> events) {
-        var copy=List.copyOf(events);
-        if (TransactionSynchronizationManager.isSynchronizationActive()) {
-            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-                @Override public void afterCommit() { copy.forEach(publisher::publishEvent); }
-            });
-        } else copy.forEach(publisher::publishEvent);
-    }
+	private final ApplicationEventPublisher publisher;
+
+	public SpringReservationEventPublisher(ApplicationEventPublisher publisher) {
+		this.publisher = publisher;
+	}
+
+	@Override
+	public void publishAfterCommit(Collection<Object> events) {
+		var copy = List.copyOf(events);
+		if (TransactionSynchronizationManager.isSynchronizationActive()) {
+			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+				@Override
+				public void afterCommit() {
+					copy.forEach(publisher::publishEvent);
+				}
+			});
+		} else
+			copy.forEach(publisher::publishEvent);
+	}
 }

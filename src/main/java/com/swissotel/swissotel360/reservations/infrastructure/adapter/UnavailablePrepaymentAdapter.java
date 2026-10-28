@@ -8,5 +8,8 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class UnavailablePrepaymentAdapter implements PrepaymentPort {
-    @Override public PrepaymentRequest request(ReservationId id,ReservationCode code,Money amount) { return PrepaymentRequest.unavailable(); }
+	@Override
+	public PrepaymentRequest request(ReservationId id, ReservationCode code, Money amount) {
+		return PrepaymentRequest.unavailable();
+	}
 }

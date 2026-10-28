@@ -8,10 +8,29 @@ import java.util.UUID;
 
 @Component
 public class GuestDirectoryContextFacadeImpl implements GuestDirectoryContextFacade {
-    private final GuestQueryService guests;
-    public GuestDirectoryContextFacadeImpl(GuestQueryService guests) { this.guests=guests; }
-    @Override public Optional<GuestDirectorySnapshot> findByPublicId(UUID id) { return guests.findByPublicId(id).map(GuestDirectoryContextFacadeImpl::snapshot); }
-    @Override public Optional<GuestDirectorySnapshot> findById(Long id) { return guests.findById(id).map(GuestDirectoryContextFacadeImpl::snapshot); }
-    @Override public Optional<GuestDirectorySnapshot> findByUserId(Long id) { return guests.findByUserId(id).map(GuestDirectoryContextFacadeImpl::snapshot); }
-    private static GuestDirectorySnapshot snapshot(Guest g) { return new GuestDirectorySnapshot(g.getId(), g.getPublicId(), g.getUserId(), (g.getFirstName()+" "+g.getLastName()).trim(), g.getEmail()); }
+	private final GuestQueryService guests;
+
+	public GuestDirectoryContextFacadeImpl(GuestQueryService guests) {
+		this.guests = guests;
+	}
+
+	@Override
+	public Optional<GuestDirectorySnapshot> findByPublicId(UUID id) {
+		return guests.findByPublicId(id).map(GuestDirectoryContextFacadeImpl::snapshot);
+	}
+
+	@Override
+	public Optional<GuestDirectorySnapshot> findById(Long id) {
+		return guests.findById(id).map(GuestDirectoryContextFacadeImpl::snapshot);
+	}
+
+	@Override
+	public Optional<GuestDirectorySnapshot> findByUserId(Long id) {
+		return guests.findByUserId(id).map(GuestDirectoryContextFacadeImpl::snapshot);
+	}
+
+	private static GuestDirectorySnapshot snapshot(Guest g) {
+		return new GuestDirectorySnapshot(g.getId(), g.getPublicId(), g.getUserId(),
+				(g.getFirstName() + " " + g.getLastName()).trim(), g.getEmail());
+	}
 }

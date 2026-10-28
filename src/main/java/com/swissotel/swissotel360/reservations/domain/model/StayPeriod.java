@@ -6,12 +6,21 @@ import java.time.temporal.ChronoUnit;
 import java.util.stream.Stream;
 
 public record StayPeriod(LocalDate checkIn, LocalDate checkOut) {
-    public StayPeriod {
-        if (checkIn == null || checkOut == null || !checkOut.isAfter(checkIn)) {
-            throw new InvalidStayPeriodException("check_out_must_be_after_check_in");
-        }
-    }
-    public int nights() { return Math.toIntExact(ChronoUnit.DAYS.between(checkIn, checkOut)); }
-    public boolean overlaps(StayPeriod other) { return checkIn.isBefore(other.checkOut) && checkOut.isAfter(other.checkIn); }
-    public Stream<LocalDate> eachNight() { return checkIn.datesUntil(checkOut); }
+	public StayPeriod {
+		if (checkIn == null || checkOut == null || !checkOut.isAfter(checkIn)) {
+			throw new InvalidStayPeriodException("check_out_must_be_after_check_in");
+		}
+	}
+
+	public int nights() {
+		return Math.toIntExact(ChronoUnit.DAYS.between(checkIn, checkOut));
+	}
+
+	public boolean overlaps(StayPeriod other) {
+		return checkIn.isBefore(other.checkOut) && checkOut.isAfter(other.checkIn);
+	}
+
+	public Stream<LocalDate> eachNight() {
+		return checkIn.datesUntil(checkOut);
+	}
 }

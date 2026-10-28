@@ -10,17 +10,25 @@ import java.util.stream.Collectors;
 
 @Component
 public class CurrentActorAdapter implements CurrentActorPort {
-    private final IamContextFacade iam;
-    public CurrentActorAdapter(IamContextFacade iam) { this.iam=iam; }
-    @Override public CurrentActor current() {
-        var authentication=SecurityContextHolder.getContext().getAuthentication();
-        if (authentication==null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof UserDetails principal))
-            throw new IllegalStateException("An authenticated user is required");
-        var userId=iam.fetchUserIdByEmail(principal.getUsername());
-        if (userId==null || userId<1) throw new IllegalStateException("Authenticated IAM user could not be resolved");
-        var authorities=authentication.getAuthorities().stream().map(a->a.getAuthority()).collect(Collectors.toSet());
-        var role=authorities.stream().filter(a->a.startsWith("ROLE_")).findFirst().orElse("");
-        var permissions=authorities.stream().filter(a->!a.startsWith("ROLE_")).collect(Collectors.toSet());
-        return new CurrentActor(new UserId(userId),role,permissions);
-    }
+	private final IamContextFacade iam;
+
+	public CurrentActorAdapter(IamContextFacade iam) {
+		this.iam = iam;
+	}
+
+	@Override
+	public CurrentActor current() {
+		var authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (authentication == null || !authentication.isAuthenticated()
+				|| !(authentication.getPrincipal() instanceof UserDetails principal))
+			throw new IllegalStateException("An authenticated user is required");
+		var userId = iam.fetchUserIdByEmail(principal.getUsername());
+		if (userId == null || userId < 1)
+			throw new IllegalStateException("Authenticated IAM user could not be resolved");
+		var authorities = authentication.getAuthorities().stream().map(a -> a.getAuthority())
+				.collect(Collectors.toSet());
+		var role = authorities.stream().filter(a -> a.startsWith("ROLE_")).findFirst().orElse("");
+		var permissions = authorities.stream().filter(a -> !a.startsWith("ROLE_")).collect(Collectors.toSet());
+		return new CurrentActor(new UserId(userId), role, permissions);
+	}
 }

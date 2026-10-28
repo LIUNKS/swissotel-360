@@ -6,8 +6,12 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface GuestDirectoryPort {
-    Optional<GuestSnapshot> findByPublicId(UUID guestPublicId);
-    Optional<GuestSnapshot> findByUserId(UserId userId);
-    Optional<GuestSnapshot> findById(GuestId guestId);
-    record GuestSnapshot(GuestId id, UUID publicId, String fullName, String email) { }
+	Optional<GuestSnapshot> findByPublicId(UUID guestPublicId);
+
+	Optional<GuestSnapshot> findByUserId(UserId userId);
+
+	Optional<GuestSnapshot> findById(GuestId guestId);
+
+	record GuestSnapshot(GuestId id, UUID publicId, String fullName, String email) {
+	}
 }

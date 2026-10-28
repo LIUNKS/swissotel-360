@@ -8,11 +8,16 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface GuestPersistenceRepository extends JpaRepository<GuestPersistenceEntity, Long> {
-    Optional<GuestPersistenceEntity> findByPublicId(UUID publicId);
-    Optional<GuestPersistenceEntity> findByUserId(Long userId);
-    Optional<GuestPersistenceEntity> findByDocumentType_IdAndDocumentNumber(Long documentTypeId, String documentNumber);
-    boolean existsByDocumentType_IdAndDocumentNumber(Long documentTypeId, String documentNumber);
-    boolean existsByUserId(Long userId);
-    Page<GuestPersistenceEntity> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
-            String firstName, String lastName, Pageable pageable);
+	Optional<GuestPersistenceEntity> findByPublicId(UUID publicId);
+
+	Optional<GuestPersistenceEntity> findByUserId(Long userId);
+
+	Optional<GuestPersistenceEntity> findByDocumentType_IdAndDocumentNumber(Long documentTypeId, String documentNumber);
+
+	boolean existsByDocumentType_IdAndDocumentNumber(Long documentTypeId, String documentNumber);
+
+	boolean existsByUserId(Long userId);
+
+	Page<GuestPersistenceEntity> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
+			String firstName, String lastName, Pageable pageable);
 }

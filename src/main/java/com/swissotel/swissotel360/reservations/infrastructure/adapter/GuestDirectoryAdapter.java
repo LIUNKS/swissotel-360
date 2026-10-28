@@ -10,12 +10,28 @@ import java.util.UUID;
 
 @Component
 public class GuestDirectoryAdapter implements GuestDirectoryPort {
-    private final GuestDirectoryContextFacade guests;
-    public GuestDirectoryAdapter(GuestDirectoryContextFacade guests) { this.guests=guests; }
-    @Override public Optional<GuestSnapshot> findByPublicId(UUID id) { return guests.findByPublicId(id).map(GuestDirectoryAdapter::map); }
-    @Override public Optional<GuestSnapshot> findByUserId(UserId id) { return guests.findByUserId(id.value()).map(GuestDirectoryAdapter::map); }
-    @Override public Optional<GuestSnapshot> findById(GuestId id) { return guests.findById(id.value()).map(GuestDirectoryAdapter::map); }
-    private static GuestSnapshot map(com.swissotel.swissotel360.guests.interfaces.acl.GuestDirectorySnapshot g) {
-        return new GuestSnapshot(new GuestId(g.id()),g.publicId(),g.fullName(),g.email());
-    }
+	private final GuestDirectoryContextFacade guests;
+
+	public GuestDirectoryAdapter(GuestDirectoryContextFacade guests) {
+		this.guests = guests;
+	}
+
+	@Override
+	public Optional<GuestSnapshot> findByPublicId(UUID id) {
+		return guests.findByPublicId(id).map(GuestDirectoryAdapter::map);
+	}
+
+	@Override
+	public Optional<GuestSnapshot> findByUserId(UserId id) {
+		return guests.findByUserId(id.value()).map(GuestDirectoryAdapter::map);
+	}
+
+	@Override
+	public Optional<GuestSnapshot> findById(GuestId id) {
+		return guests.findById(id.value()).map(GuestDirectoryAdapter::map);
+	}
+
+	private static GuestSnapshot map(com.swissotel.swissotel360.guests.interfaces.acl.GuestDirectorySnapshot g) {
+		return new GuestSnapshot(new GuestId(g.id()), g.publicId(), g.fullName(), g.email());
+	}
 }
