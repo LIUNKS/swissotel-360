@@ -8,6 +8,18 @@ import com.swissotel.swissotel360.guests.domain.exceptions.GuestNotFoundExceptio
 import com.swissotel.swissotel360.guests.domain.exceptions.InvalidDocumentNumberException;
 import com.swissotel.swissotel360.guests.domain.exceptions.UserAlreadyLinkedException;
 import com.swissotel.swissotel360.guests.domain.exceptions.UserNotFoundException;
+import com.swissotel.swissotel360.rooms.domain.exceptions.RoomTypeNotFoundException;
+import com.swissotel.swissotel360.rooms.domain.exceptions.RoomNotFoundException;
+import com.swissotel.swissotel360.rooms.domain.exceptions.DuplicateRoomTypeException;
+import com.swissotel.swissotel360.rooms.domain.exceptions.DuplicateRoomNumberException;
+import com.swissotel.swissotel360.rooms.domain.exceptions.RateOverlapException;
+import com.swissotel.swissotel360.rooms.domain.exceptions.InvalidRoomStatusTransitionException;
+import com.swissotel.swissotel360.rooms.domain.exceptions.RoomTypeInUseException;
+import com.swissotel.swissotel360.rooms.domain.exceptions.RateNotFoundException;
+import com.swissotel.swissotel360.rooms.domain.exceptions.RateEntityNotFoundException;
+import com.swissotel.swissotel360.rooms.domain.exceptions.RateCannotBeDeletedException;
+import com.swissotel.swissotel360.rooms.domain.exceptions.RoomInUseException;
+import com.swissotel.swissotel360.rooms.domain.exceptions.OccupiedRoomTypeChangeException;
 import com.swissotel.swissotel360.shared.interfaces.rest.resources.ErrorResource;
 
 import org.jspecify.annotations.NullMarked;
@@ -16,6 +28,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -73,6 +86,45 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleUserAlreadyLinked(UserAlreadyLinkedException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "user_already_linked"));
     }
+
+    @ExceptionHandler(RoomTypeNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleRoomTypeNotFound(RoomTypeNotFoundException ex) { return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "room_type_not_found")); }
+
+    @ExceptionHandler(RoomNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleRoomNotFound(RoomNotFoundException ex) { return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "room_not_found")); }
+
+    @ExceptionHandler(RateEntityNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleRateEntityNotFound(RateEntityNotFoundException ex) { return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "rate_not_found")); }
+
+    @ExceptionHandler(DuplicateRoomTypeException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateRoomType(DuplicateRoomTypeException ex) { return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "duplicate_room_type")); }
+
+    @ExceptionHandler(DuplicateRoomNumberException.class)
+    public ResponseEntity<Map<String, String>> handleDuplicateRoomNumber(DuplicateRoomNumberException ex) { return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "duplicate_room_number")); }
+
+    @ExceptionHandler(RateOverlapException.class)
+    public ResponseEntity<Map<String, Object>> handleRateOverlap(RateOverlapException ex) { return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "rate_overlap", "conflicts", ex.getConflicts())); }
+
+    @ExceptionHandler(InvalidRoomStatusTransitionException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidRoomStatus(InvalidRoomStatusTransitionException ex) { return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "invalid_status_transition", "from", ex.getFrom().name(), "to", ex.getTo().name())); }
+
+    @ExceptionHandler(RoomTypeInUseException.class)
+    public ResponseEntity<Map<String, String>> handleRoomTypeInUse(RoomTypeInUseException ex) { return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "room_type_in_use")); }
+
+    @ExceptionHandler(RoomInUseException.class)
+    public ResponseEntity<Map<String, String>> handleRoomInUse(RoomInUseException ex) { return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "room_in_use")); }
+
+    @ExceptionHandler(OccupiedRoomTypeChangeException.class)
+    public ResponseEntity<Map<String, String>> handleOccupiedRoomTypeChange(OccupiedRoomTypeChangeException ex) { return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "occupied_room_type_change")); }
+
+    @ExceptionHandler(RateCannotBeDeletedException.class)
+    public ResponseEntity<Map<String, String>> handleRateCannotBeDeleted(RateCannotBeDeletedException ex) { return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "rate_cannot_be_deleted")); }
+
+    @ExceptionHandler(RateNotFoundException.class)
+    public ResponseEntity<Map<String, String>> handleRateNotFound(RateNotFoundException ex) { return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", "rate_not_found", "date", ex.getDate().toString())); }
+
+    @ExceptionHandler({MethodArgumentTypeMismatchException.class, org.springframework.http.converter.HttpMessageNotReadableException.class})
+    public ResponseEntity<Map<String, String>> handleInvalidRequestFormat(Exception ex) { return ResponseEntity.badRequest().body(Map.of("error", "invalid_request", "message", ex.getMessage() == null ? "Invalid request value" : ex.getMessage())); }
 
     /**
      * Handles validation exceptions from Spring's request body validation.

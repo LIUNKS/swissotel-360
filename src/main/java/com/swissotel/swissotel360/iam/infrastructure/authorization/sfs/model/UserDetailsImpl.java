@@ -22,17 +22,10 @@ public class UserDetailsImpl implements UserDetails {
         this.authorities = authorities;
     }
 
-    public static UserDetailsImpl build(User user) {
+    public static UserDetailsImpl build(User user, Collection<String> permissionCodes) {
         var authorities = new ArrayList<GrantedAuthority>();
         authorities.add(new SimpleGrantedAuthority(user.getRole().getStringName()));
-        // These capabilities match the grants seeded in V1__init_schema.sql.
-        switch (user.getRole().getStringName()) {
-            case "ROLE_SUPER_ADMIN", "ROLE_MANAGER", "ROLE_RECEPTIONIST" -> {
-                authorities.add(new SimpleGrantedAuthority("guests.view"));
-                authorities.add(new SimpleGrantedAuthority("guests.manage"));
-            }
-            default -> { }
-        }
+        permissionCodes.stream().map(SimpleGrantedAuthority::new).forEach(authorities::add);
         return new UserDetailsImpl(user.getEmail(), user.getPassword(), authorities);
     }
 
