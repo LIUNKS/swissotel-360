@@ -11,6 +11,7 @@ public interface GuestPersistenceRepository extends JpaRepository<GuestPersisten
     Optional<GuestPersistenceEntity> findByPublicId(UUID publicId);
     Optional<GuestPersistenceEntity> findByDocumentType_IdAndDocumentNumber(Long documentTypeId, String documentNumber);
     boolean existsByDocumentType_IdAndDocumentNumber(Long documentTypeId, String documentNumber);
+    boolean existsByUserId(Long userId);
     Page<GuestPersistenceEntity> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(
             String firstName, String lastName, Pageable pageable);
 }

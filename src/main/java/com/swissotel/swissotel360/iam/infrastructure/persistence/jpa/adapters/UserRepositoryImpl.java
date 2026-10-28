@@ -8,6 +8,7 @@ import com.swissotel.swissotel360.iam.infrastructure.persistence.jpa.repositorie
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class UserRepositoryImpl implements UserRepository {
@@ -25,6 +26,11 @@ public class UserRepositoryImpl implements UserRepository {
     @Override
     public Optional<User> findById(Long id) {
         return repository.findById(id).map(UserPersistenceAssembler::toDomainEntity);
+    }
+
+    @Override
+    public Optional<User> findByPublicId(UUID publicId) {
+        return repository.findByPublicId(publicId).map(UserPersistenceAssembler::toDomainEntity);
     }
 
     @Override

@@ -8,6 +8,8 @@ import com.swissotel.swissotel360.guests.domain.model.queries.SearchGuestsQuery;
 import com.swissotel.swissotel360.guests.interfaces.rest.resources.CreateGuestResource;
 import com.swissotel.swissotel360.guests.interfaces.rest.resources.GuestResource;
 import com.swissotel.swissotel360.guests.interfaces.rest.resources.UpdateGuestResource;
+import com.swissotel.swissotel360.guests.interfaces.rest.resources.LinkGuestAccountResource;
+import com.swissotel.swissotel360.guests.domain.model.commands.LinkGuestAccountCommand;
 import com.swissotel.swissotel360.guests.interfaces.rest.transform.GuestCommandAssembler;
 import com.swissotel.swissotel360.guests.interfaces.rest.transform.CreateGuestCommandAssembler;
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/v1/guests")
+@RequestMapping({"/api/v1/guests", "/api/guests"})
 @Tag(name = "Guests", description = "Guest identity and profile management")
 public class GuestController {
     private final GuestCommandService commandService;
@@ -81,5 +83,20 @@ public class GuestController {
     @ApiResponses({@ApiResponse(responseCode = "200", description = "Guest updated", content = @Content(schema = @Schema(implementation = GuestResource.class))), @ApiResponse(responseCode = "400", description = "Invalid input"), @ApiResponse(responseCode = "404", description = "Guest not found"), @ApiResponse(responseCode = "403", description = "Permission denied")})
     public ResponseEntity<GuestResource> update(@PathVariable UUID publicId, @Valid @RequestBody UpdateGuestResource resource) {
         return ResponseEntity.ok(GuestResource.from(commandService.update(GuestCommandAssembler.toCommand(publicId, resource))));
+    }
+
+    @PostMapping("/{guestPublicId}/link-account")
+    @PreAuthorize("hasAuthority('guests.manage')")
+    @Operation(summary = "Link an IAM account to a guest", security = @SecurityRequirement(name = "bearerAuth"))
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "IAM account linked", content = @Content(schema = @Schema(implementation = GuestResource.class))),
+            @ApiResponse(responseCode = "404", description = "Guest or IAM user not found"),
+            @ApiResponse(responseCode = "409", description = "IAM account already linked to a guest"),
+            @ApiResponse(responseCode = "403", description = "Permission denied")
+    })
+    public ResponseEntity<GuestResource> linkAccount(@PathVariable UUID guestPublicId,
+            @Valid @RequestBody LinkGuestAccountResource resource) {
+        var command = new LinkGuestAccountCommand(guestPublicId, resource.userPublicId());
+        return ResponseEntity.ok(GuestResource.from(commandService.linkUserAccount(command)));
     }
 }
