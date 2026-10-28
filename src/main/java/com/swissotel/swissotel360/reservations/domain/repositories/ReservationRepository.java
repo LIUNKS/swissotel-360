@@ -13,6 +13,8 @@ public interface ReservationRepository {
 
 	Optional<Reservation> findByCode(ReservationCode code);
 
+	Optional<Long> findInternalId(ReservationId id);
+
 	long countActiveOverlapping(RoomTypeId type, StayPeriod period, Optional<ReservationId> excluding);
 
 	List<Reservation> findPendingCreatedBefore(Instant threshold, PaymentType type, int limit);

@@ -10,6 +10,8 @@ public interface ReservationsContextFacade {
 
 	ReservationContextSnapshot getForCheckIn(UUID reservationPublicId);
 
+	java.util.Optional<ReservationContextSnapshot> findByCode(String code);
+
 	void markCompleted(UUID reservationPublicId);
 
 	void confirmPrepaid(UUID reservationPublicId);
