@@ -13,7 +13,10 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,properties={
+        "spring.flyway.enabled=false",
+        "spring.jpa.hibernate.ddl-auto=none",
+        "reservations.expiration-job.enabled=false"})
 class Swissotel360ApplicationTests {
 
     @Test
@@ -21,7 +24,7 @@ class Swissotel360ApplicationTests {
     }
 
     @Test
-    void roomsEndpointsRequireAuthentication(@LocalServerPort int port) throws Exception {
+    void protectedBoundedContextEndpointsRequireAuthentication(@LocalServerPort int port) throws Exception {
         var publicId = UUID.randomUUID();
         var paths = List.of(
                 "/api/rooms",
@@ -29,7 +32,10 @@ class Swissotel360ApplicationTests {
                 "/api/room-types/" + publicId,
                 "/api/room-types/" + publicId + "/rates",
                 "/api/availability?checkIn=2026-11-01&checkOut=2026-11-03",
-                "/api/room-types/" + publicId + "/quote?checkIn=2026-11-01&checkOut=2026-11-03");
+                "/api/room-types/" + publicId + "/quote?checkIn=2026-11-01&checkOut=2026-11-03",
+                "/api/reservations",
+                "/api/reservations/" + publicId,
+                "/api/reservations/by-code/SW26-7H3KQ9XA");
 
         try (var client = HttpClient.newHttpClient()) {
             for (var path : paths) {

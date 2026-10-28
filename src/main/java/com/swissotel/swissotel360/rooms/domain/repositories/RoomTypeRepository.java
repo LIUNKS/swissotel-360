@@ -7,6 +7,7 @@ public interface RoomTypeRepository {
     RoomType save(RoomType roomType);
     Optional<RoomType> findByPublicId(UUID publicId);
     Optional<RoomType> findById(Long id);
+    void lockInventory(Long id);
     List<RoomType> findAll();
     boolean existsByNameIgnoreCase(String name);
     boolean existsByNameIgnoreCaseAndIdNot(String name, Long id);

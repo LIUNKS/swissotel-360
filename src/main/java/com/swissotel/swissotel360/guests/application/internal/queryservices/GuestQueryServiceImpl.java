@@ -26,6 +26,11 @@ public class GuestQueryServiceImpl implements GuestQueryService {
         return guestRepository.findByPublicId(publicId).orElseThrow(() -> new GuestNotFoundException(publicId.toString()));
     }
 
+    @Override public java.util.Optional<Guest> findByPublicId(UUID publicId) { return guestRepository.findByPublicId(publicId); }
+
+    @Override public java.util.Optional<Guest> findById(Long id) { return guestRepository.findById(id); }
+    @Override public java.util.Optional<Guest> findByUserId(Long userId) { return guestRepository.findByUserId(userId); }
+
     @Override
     public Guest findByDocument(Long documentTypeId, String documentNumber) {
         return guestRepository.findByDocument(documentTypeId, documentNumber.trim())

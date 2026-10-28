@@ -21,6 +21,13 @@ import com.swissotel.swissotel360.rooms.domain.exceptions.RateCannotBeDeletedExc
 import com.swissotel.swissotel360.rooms.domain.exceptions.RoomInUseException;
 import com.swissotel.swissotel360.rooms.domain.exceptions.OccupiedRoomTypeChangeException;
 import com.swissotel.swissotel360.shared.interfaces.rest.resources.ErrorResource;
+import com.swissotel.swissotel360.reservations.domain.exceptions.DuplicateReservationException;
+import com.swissotel.swissotel360.reservations.domain.exceptions.GuestProfileRequiredException;
+import com.swissotel.swissotel360.reservations.domain.exceptions.InvalidReservationTransitionException;
+import com.swissotel.swissotel360.reservations.domain.exceptions.InvalidStayPeriodException;
+import com.swissotel.swissotel360.reservations.domain.exceptions.NoAvailabilityException;
+import com.swissotel.swissotel360.reservations.domain.exceptions.ReservationNotFoundException;
+import com.swissotel.swissotel360.reservations.domain.exceptions.ReservationNotModifiableException;
 
 import org.jspecify.annotations.NullMarked;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -122,6 +129,36 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(RateNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleRateNotFound(RateNotFoundException ex) { return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", "rate_not_found", "date", ex.getDate().toString())); }
+
+    @ExceptionHandler(com.swissotel.swissotel360.reservations.domain.exceptions.GuestNotFoundException.class)
+    public ResponseEntity<Map<String,String>> handleReservationGuestNotFound(com.swissotel.swissotel360.reservations.domain.exceptions.GuestNotFoundException ex) { return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error","guest_not_found")); }
+
+    @ExceptionHandler(com.swissotel.swissotel360.reservations.domain.exceptions.RoomTypeNotFoundException.class)
+    public ResponseEntity<Map<String,String>> handleReservationRoomTypeNotFound(com.swissotel.swissotel360.reservations.domain.exceptions.RoomTypeNotFoundException ex) { return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error","room_type_not_found")); }
+
+    @ExceptionHandler(ReservationNotFoundException.class)
+    public ResponseEntity<Map<String,String>> handleReservationNotFound(ReservationNotFoundException ex) { return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error","reservation_not_found")); }
+
+    @ExceptionHandler(InvalidStayPeriodException.class)
+    public ResponseEntity<Map<String,String>> handleInvalidStayPeriod(InvalidStayPeriodException ex) { return ResponseEntity.badRequest().body(Map.of("error","invalid_stay_period","reason",ex.getReason())); }
+
+    @ExceptionHandler(NoAvailabilityException.class)
+    public ResponseEntity<Map<String,String>> handleNoAvailability(NoAvailabilityException ex) { return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error","no_availability")); }
+
+    @ExceptionHandler(DuplicateReservationException.class)
+    public ResponseEntity<Map<String,String>> handleDuplicateReservation(DuplicateReservationException ex) { return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error","duplicate_reservation")); }
+
+    @ExceptionHandler(InvalidReservationTransitionException.class)
+    public ResponseEntity<Map<String,String>> handleInvalidReservationTransition(InvalidReservationTransitionException ex) { return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error","invalid_status_transition","from",ex.getFrom().code(),"to",ex.getTo().code())); }
+
+    @ExceptionHandler(ReservationNotModifiableException.class)
+    public ResponseEntity<Map<String,String>> handleReservationNotModifiable(ReservationNotModifiableException ex) { return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error","reservation_not_modifiable")); }
+
+    @ExceptionHandler(GuestProfileRequiredException.class)
+    public ResponseEntity<Map<String,String>> handleGuestProfileRequired(GuestProfileRequiredException ex) { return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error","guest_profile_required")); }
+
+    @ExceptionHandler(com.swissotel.swissotel360.reservations.domain.exceptions.RateNotFoundException.class)
+    public ResponseEntity<Map<String,String>> handleReservationRateNotFound(com.swissotel.swissotel360.reservations.domain.exceptions.RateNotFoundException ex) { return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error","rate_not_found","date",ex.getDate().toString())); }
 
     @ExceptionHandler({MethodArgumentTypeMismatchException.class, org.springframework.http.converter.HttpMessageNotReadableException.class})
     public ResponseEntity<Map<String, String>> handleInvalidRequestFormat(Exception ex) { return ResponseEntity.badRequest().body(Map.of("error", "invalid_request", "message", ex.getMessage() == null ? "Invalid request value" : ex.getMessage())); }

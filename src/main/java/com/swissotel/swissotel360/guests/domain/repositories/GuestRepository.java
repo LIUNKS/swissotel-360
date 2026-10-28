@@ -8,6 +8,8 @@ import java.util.UUID;
 public interface GuestRepository {
     Guest save(Guest guest);
     Optional<Guest> findByPublicId(UUID publicId);
+    Optional<Guest> findById(Long id);
+    Optional<Guest> findByUserId(Long userId);
     Optional<Guest> findByDocument(Long documentTypeId, String documentNumber);
     boolean existsByDocument(Long documentTypeId, String documentNumber);
     boolean existsByUserId(Long userId);

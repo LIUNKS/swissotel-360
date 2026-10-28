@@ -4,6 +4,6 @@ import java.time.LocalDate;
 public class ReservationsAvailabilityOutboundService implements ReservationsAvailabilityService {
     private final ReservationsContextFacade reservations;
     public ReservationsAvailabilityOutboundService(ReservationsContextFacade reservations) { this.reservations=reservations; }
-    public long countOverlappingActiveReservations(java.util.UUID id,LocalDate checkIn,LocalDate checkOut) { return reservations.countActiveReservationsOverlapping(id,checkIn,checkOut); }
-    public boolean hasReservations(java.util.UUID id) { return reservations.hasReservationsForRoomType(id); }
+    public long countOverlappingActiveReservations(Long id,LocalDate checkIn,LocalDate checkOut) { return reservations.countActiveReservationsOverlapping(id,checkIn,checkOut); }
+    public boolean hasReservations(Long id) { return reservations.hasReservationsForRoomType(id); }
 }

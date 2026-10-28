@@ -16,6 +16,7 @@ import java.util.UUID;
     public RoomType save(RoomType type) { try { return RoomsPersistenceAssembler.toDomain(repository.saveAndFlush(RoomsPersistenceAssembler.toEntity(type))); } catch(DataIntegrityViolationException ex) { throw new DuplicateRoomTypeException(type.name()); } }
     public Optional<RoomType> findByPublicId(UUID id) { return repository.findByPublicId(id).map(RoomsPersistenceAssembler::toDomain); }
     public Optional<RoomType> findById(Long id) { return repository.findById(id).map(RoomsPersistenceAssembler::toDomain); }
+    public void lockInventory(Long id) { repository.lockInventoryById(id).orElseThrow(() -> new IllegalStateException("Room type does not exist: " + id)); }
     public List<RoomType> findAll() { return repository.findAll().stream().map(RoomsPersistenceAssembler::toDomain).toList(); }
     public boolean existsByNameIgnoreCase(String name) { return repository.existsByNameIgnoreCase(name); }
     public boolean existsByNameIgnoreCaseAndIdNot(String name,Long id) { return repository.existsByNameIgnoreCaseAndIdNot(name,id); }

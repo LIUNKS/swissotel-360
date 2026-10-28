@@ -33,6 +33,9 @@ public class GuestRepositoryImpl implements GuestRepository {
     @Override
     public Optional<Guest> findByPublicId(UUID publicId) { return guests.findByPublicId(publicId).map(GuestPersistenceAssembler::toDomain); }
 
+    @Override public Optional<Guest> findById(Long id) { return guests.findById(id).map(GuestPersistenceAssembler::toDomain); }
+    @Override public Optional<Guest> findByUserId(Long userId) { return guests.findByUserId(userId).map(GuestPersistenceAssembler::toDomain); }
+
     @Override
     public Optional<Guest> findByDocument(Long typeId, String number) {
         return guests.findByDocumentType_IdAndDocumentNumber(typeId, number).map(GuestPersistenceAssembler::toDomain);
