@@ -18,35 +18,34 @@ import java.io.IOException;
 
 @Component
 public class BearerAuthorizationRequestFilter extends OncePerRequestFilter {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BearerAuthorizationRequestFilter.class);
-    private final BearerTokenService tokenService;
-    @Qualifier("defaultUserDetailsService")
-    private final UserDetailsService userDetailsService;
+	private static final Logger LOGGER = LoggerFactory.getLogger(BearerAuthorizationRequestFilter.class);
+	private final BearerTokenService tokenService;
+	@Qualifier("defaultUserDetailsService")
+	private final UserDetailsService userDetailsService;
 
-    public BearerAuthorizationRequestFilter(BearerTokenService tokenService, UserDetailsService userDetailsService) {
-        this.tokenService = tokenService;
-        this.userDetailsService = userDetailsService;
-    }
+	public BearerAuthorizationRequestFilter(BearerTokenService tokenService, UserDetailsService userDetailsService) {
+		this.tokenService = tokenService;
+		this.userDetailsService = userDetailsService;
+	}
 
-    @Override
-    protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
-            @NonNull FilterChain filterChain) throws ServletException, IOException {
-        try {
-            String token = tokenService.getBearerTokenFrom(request);
-            if (token != null) {
-                if (tokenService.validateToken(token)) {
-                    String email = tokenService.getUsernameFromToken(token);
-                    var userDetails = userDetailsService.loadUserByUsername(email);
-                    var authentication = UsernamePasswordAuthenticationTokenBuilder.build(userDetails, request);
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                } else {
-                    LOGGER.debug("Provided token is not valid");
-                }
-            }
-        } catch (Exception e) {
-            LOGGER.error("Cannot set user authentication: {}", e.getMessage());
-        }
-        filterChain.doFilter(request, response);
-    }
+	@Override
+	protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response,
+			@NonNull FilterChain filterChain) throws ServletException, IOException {
+		try {
+			String token = tokenService.getBearerTokenFrom(request);
+			if (token != null) {
+				if (tokenService.validateToken(token)) {
+					String email = tokenService.getUsernameFromToken(token);
+					var userDetails = userDetailsService.loadUserByUsername(email);
+					var authentication = UsernamePasswordAuthenticationTokenBuilder.build(userDetails, request);
+					SecurityContextHolder.getContext().setAuthentication(authentication);
+				} else {
+					LOGGER.debug("Provided token is not valid");
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.error("Cannot set user authentication: {}", e.getMessage());
+		}
+		filterChain.doFilter(request, response);
+	}
 }
-    

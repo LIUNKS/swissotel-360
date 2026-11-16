@@ -12,20 +12,22 @@ import java.util.Optional;
 
 public interface RolePersistenceRepository extends JpaRepository<RolePersistenceEntity, Long> {
 
-    /**
-     * This method is responsible for finding the role by name.
-     * 
-     * @param name The role name.
-     * @return The role object.
-     */
-    Optional<RolePersistenceEntity> findByName(Roles name);
+	/**
+	 * This method is responsible for finding the role by name.
+	 *
+	 * @param name
+	 *                 The role name.
+	 * @return The role object.
+	 */
+	Optional<RolePersistenceEntity> findByName(Roles name);
 
-    /**
-     * This method is responsible for checking if the role exists by name.
-     * 
-     * @param name The role name.
-     * @return True if the role exists, false otherwise.
-     */
-    boolean existsByName(Roles name);
+	/**
+	 * This method is responsible for checking if the role exists by name.
+	 *
+	 * @param name
+	 *                 The role name.
+	 * @return True if the role exists, false otherwise.
+	 */
+	boolean existsByName(Roles name);
 
 }

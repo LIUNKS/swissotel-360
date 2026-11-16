@@ -8,8 +8,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 @EnableJpaAuditing
 public class Swissotel360Application {
 
-    public static void main(String[] args) {
-        SpringApplication.run(Swissotel360Application.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(Swissotel360Application.class, args);
+	}
 
 }
