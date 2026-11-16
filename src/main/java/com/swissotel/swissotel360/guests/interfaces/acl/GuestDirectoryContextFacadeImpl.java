@@ -31,6 +31,7 @@ public class GuestDirectoryContextFacadeImpl implements GuestDirectoryContextFac
 
 	private static GuestDirectorySnapshot snapshot(Guest g) {
 		return new GuestDirectorySnapshot(g.getId(), g.getPublicId(), g.getUserId(),
-				(g.getFirstName() + " " + g.getLastName()).trim(), g.getEmail());
+				(g.getFirstName() + " " + g.getLastName()).trim(), g.getEmail(),
+				g.getDocumentTypeCode(), g.getDocumentNumber());
 	}
 }

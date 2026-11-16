@@ -50,6 +50,11 @@ public class ReservationRepositoryImpl implements ReservationRepository {
 	}
 
 	@Override
+	public Optional<Long> findInternalId(ReservationId id) {
+		return repository.findByPublicId(id.value()).map(ReservationPersistenceEntity::getId);
+	}
+
+	@Override
 	public long countActiveOverlapping(RoomTypeId type, StayPeriod period, Optional<ReservationId> excluding) {
 		return repository.countActiveOverlapping(type.value(), period.checkIn(), period.checkOut(),
 				excluding.map(ReservationId::value).orElse(null));

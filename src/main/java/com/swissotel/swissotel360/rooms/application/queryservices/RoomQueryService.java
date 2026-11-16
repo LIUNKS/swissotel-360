@@ -7,4 +7,6 @@ public interface RoomQueryService {
 	RoomPageView find(RoomFilter filter);
 
 	RoomView findByPublicId(GetRoomByPublicIdQuery query);
+
+	java.util.Optional<RoomView> findById(Long id);
 }

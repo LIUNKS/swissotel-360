@@ -40,6 +40,10 @@ public class RoomRepositoryImpl implements RoomRepository {
 		return repository.findByPublicId(id).map(RoomsPersistenceAssembler::toDomain);
 	}
 
+	public Optional<Room> findById(Long id) {
+		return repository.findById(id).map(RoomsPersistenceAssembler::toDomain);
+	}
+
 	public boolean existsByRoomNumber(String number) {
 		return repository.existsByRoomNumber(number);
 	}

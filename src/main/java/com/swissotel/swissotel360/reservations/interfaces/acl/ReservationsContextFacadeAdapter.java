@@ -30,9 +30,18 @@ public class ReservationsContextFacadeAdapter implements ReservationsContextFaca
 
 	@Override
 	public ReservationContextSnapshot getForCheckIn(UUID id) {
-		var s = reservations.getForCheckIn(id);
+		return toSnapshot(reservations.getForCheckIn(id));
+	}
+
+	@Override
+	public java.util.Optional<ReservationContextSnapshot> findByCode(String code) {
+		return reservations.findByCode(code).map(ReservationsContextFacadeAdapter::toSnapshot);
+	}
+
+	private static ReservationContextSnapshot toSnapshot(
+			com.swissotel.swissotel360.reservations.application.dto.ReservationSnapshot s) {
 		return new ReservationContextSnapshot(s.publicId(), s.code(), s.guestId().value(), s.roomTypeId().value(),
-				s.checkIn(), s.checkOut(), s.status());
+				s.checkIn(), s.checkOut(), s.status(), s.internalId());
 	}
 
 	@Override

@@ -29,6 +29,10 @@ public class RoomQueryServiceImpl implements RoomQueryService {
 		return toView(rooms.findByPublicId(id).orElseThrow(() -> new RoomNotFoundException(id)));
 	}
 
+	public java.util.Optional<RoomView> findById(Long id) {
+		return rooms.findById(id).map(this::toView);
+	}
+
 	private RoomView toView(Room room) {
 		var type = roomTypes.findById(room.roomTypeId()).orElseThrow();
 		return new RoomView(room, type.publicId(), type.name());

@@ -11,6 +11,8 @@ public interface RoomRepository {
 
 	Optional<Room> findByPublicId(UUID publicId);
 
+	Optional<Room> findById(Long id);
+
 	boolean existsByRoomNumber(String roomNumber);
 
 	long countByRoomTypeId(Long roomTypeId);
