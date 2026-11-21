@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/service-types")
+@RequestMapping("/api/v1/service-types")
 @Tag(name = "Service types", description = "Catalog of requestable hotel services")
 public class ServiceTypeController {
 	private final ServiceRequestQueryService queries;

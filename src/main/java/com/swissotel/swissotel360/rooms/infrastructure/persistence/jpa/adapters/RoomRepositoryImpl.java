@@ -7,9 +7,11 @@ import com.swissotel.swissotel360.rooms.domain.model.queries.RoomPage;
 import com.swissotel.swissotel360.rooms.domain.model.valueobjects.RoomStatus;
 import com.swissotel.swissotel360.rooms.domain.repositories.RoomRepository;
 import com.swissotel.swissotel360.rooms.infrastructure.persistence.jpa.assemblers.RoomsPersistenceAssembler;
+import com.swissotel.swissotel360.rooms.infrastructure.persistence.jpa.entities.RoomPersistenceEntity;
 import com.swissotel.swissotel360.rooms.infrastructure.persistence.jpa.repositories.RoomPersistenceRepository;
 import com.swissotel.swissotel360.rooms.infrastructure.persistence.jpa.repositories.RoomTypePersistenceRepository;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import java.util.Optional;
@@ -57,8 +59,17 @@ public class RoomRepositoryImpl implements RoomRepository {
 	}
 
 	public RoomPage find(RoomFilter filter) {
-		var page = repository.findFiltered(filter.roomTypeId(), filter.status(),
-				PageRequest.of(filter.page(), filter.size()));
+		var pageable = PageRequest.of(filter.page(), filter.size());
+		Page<RoomPersistenceEntity> page;
+		if (filter.roomTypeId() != null && filter.status() != null) {
+			page = repository.findByRoomType_IdAndStatus(filter.roomTypeId(), filter.status(), pageable);
+		} else if (filter.roomTypeId() != null) {
+			page = repository.findByRoomType_Id(filter.roomTypeId(), pageable);
+		} else if (filter.status() != null) {
+			page = repository.findByStatus(filter.status(), pageable);
+		} else {
+			page = repository.findAll(pageable);
+		}
 		return new RoomPage(page.getContent().stream().map(RoomsPersistenceAssembler::toDomain).toList(),
 				page.getTotalElements());
 	}

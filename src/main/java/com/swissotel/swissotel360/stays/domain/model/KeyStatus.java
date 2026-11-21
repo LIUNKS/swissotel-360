@@ -10,6 +10,15 @@ public enum KeyStatus {
 	}
 
 	public static KeyStatus fromCode(String code) {
-		return valueOf(code.toUpperCase(Locale.ROOT));
+		if (code == null || code.isBlank()) {
+			throw new IllegalArgumentException("Invalid key status: " + code);
+		}
+		var normalized = code.trim().toUpperCase(Locale.ROOT);
+		for (var value : values()) {
+			if (value.name().equals(normalized)) {
+				return value;
+			}
+		}
+		throw new IllegalArgumentException("Invalid key status: " + code);
 	}
 }

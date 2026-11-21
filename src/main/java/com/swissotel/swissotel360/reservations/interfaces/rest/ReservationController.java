@@ -24,7 +24,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/reservations")
+@RequestMapping("/api/v1/reservations")
 @Tag(name = "Reservations", description = "Reservation lifecycle and guest bookings")
 public class ReservationController {
 	private final ReservationCommandService commands;

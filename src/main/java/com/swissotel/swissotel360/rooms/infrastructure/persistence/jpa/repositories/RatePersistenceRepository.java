@@ -16,7 +16,10 @@ public interface RatePersistenceRepository extends JpaRepository<RatePersistence
 	@Query("select r from RatePersistenceEntity r where r.roomType.id=:typeId and r.validFrom<=:date and (r.validTo is null or r.validTo>=:date)")
 	Optional<RatePersistenceEntity> findEffective(@Param("typeId") Long typeId, @Param("date") LocalDate date);
 
-	@Query("select r from RatePersistenceEntity r where r.roomType.id=:typeId and (:to is null or r.validFrom<=:to) and (r.validTo is null or r.validTo>=:from)")
-	List<RatePersistenceEntity> findOverlapping(@Param("typeId") Long typeId, @Param("from") LocalDate from,
+	@Query("select r from RatePersistenceEntity r where r.roomType.id = :typeId and (r.validTo is null or r.validTo >= :from)")
+	List<RatePersistenceEntity> findOverlappingOpenEnded(@Param("typeId") Long typeId, @Param("from") LocalDate from);
+
+	@Query("select r from RatePersistenceEntity r where r.roomType.id = :typeId and r.validFrom <= :to and (r.validTo is null or r.validTo >= :from)")
+	List<RatePersistenceEntity> findOverlappingClosed(@Param("typeId") Long typeId, @Param("from") LocalDate from,
 			@Param("to") LocalDate to);
 }

@@ -17,7 +17,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1")
 @Tag(name = "Room availability", description = "Search availability and quote room rates")
 public class AvailabilityController {
 	private final AvailabilityQueryService availability;

@@ -52,13 +52,10 @@ public class UserCommandServiceImpl implements UserCommandService {
 	@Override
 	public Result<ImmutablePair<User, String>, ApplicationError> handle(SignInCommand command) {
 		var userOpt = userRepository.findByEmail(command.email());
-		if (userOpt.isEmpty()) {
-			return Result.failure(ApplicationError.notFound("user", "User not found with email: " + command.email()));
+		if (userOpt.isEmpty() || !hashingService.matches(command.password(), userOpt.get().getPassword())) {
+			return Result.failure(ApplicationError.unauthorized("Invalid email or password"));
 		}
 		var user = userOpt.get();
-		if (!hashingService.matches(command.password(), user.getPassword())) {
-			return Result.failure(ApplicationError.validationError("credentials", "Invalid credentials"));
-		}
 		user.updateLastLoginAt();
 		var updatedUser = userRepository.save(user);
 		var token = tokenService.generateToken(updatedUser.getEmail());

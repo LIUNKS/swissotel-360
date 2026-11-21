@@ -34,19 +34,25 @@ import com.swissotel.swissotel360.servicerequests.domain.exceptions.*;
 import com.swissotel.swissotel360.stays.domain.exceptions.*;
 
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.text.MessageFormat;
+import java.time.LocalDate;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Global exception handler for REST API.
@@ -57,281 +63,315 @@ import java.util.Map;
 @RestControllerAdvice
 @NullMarked
 public class GlobalExceptionHandler {
+	private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 	private static final String MESSAGES_BASENAME = "messages";
 
 	@ExceptionHandler(AccessDeniedException.class)
 	public ResponseEntity<ErrorResource> handleAccessDenied(AccessDeniedException ex) {
-		return ResponseEntity.status(HttpStatus.FORBIDDEN)
-				.body(new ErrorResource("forbidden", "Permission denied", ex.getMessage()));
+		return buildErrorResponse(HttpStatus.FORBIDDEN, "FORBIDDEN", "Permission denied", "Access denied");
 	}
 
 	@ExceptionHandler(GuestNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleGuestNotFound(GuestNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "guest_not_found"));
+	public ResponseEntity<ErrorResource> handleGuestNotFound(GuestNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "GUEST_NOT_FOUND", "Guest not found", ex);
 	}
 
 	@ExceptionHandler(DocumentTypeNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleDocumentTypeNotFound(DocumentTypeNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "document_type_not_found"));
+	public ResponseEntity<ErrorResource> handleDocumentTypeNotFound(DocumentTypeNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "DOCUMENT_TYPE_NOT_FOUND", "Document type not found", ex);
 	}
 
 	@ExceptionHandler(DuplicateGuestException.class)
-	public ResponseEntity<Map<String, Object>> handleDuplicateGuest(DuplicateGuestException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-				"error", "duplicate_document",
-				"documentTypeId", ex.getDocumentTypeId(),
-				"documentNumber", ex.getDocumentNumber()));
+	public ResponseEntity<ErrorResource> handleDuplicateGuest(DuplicateGuestException ex) {
+		var details = "Document type %s, document number %s".formatted(ex.getDocumentTypeId(), ex.getDocumentNumber());
+		return buildErrorResponse(HttpStatus.CONFLICT, "DUPLICATE_DOCUMENT",
+				"A guest with this document already exists", details);
 	}
 
 	@ExceptionHandler(InvalidDocumentNumberException.class)
-	public ResponseEntity<Map<String, String>> handleInvalidDocumentNumber(InvalidDocumentNumberException ex) {
-		return ResponseEntity.badRequest().body(Map.of("error", "invalid_document_number", "message", ex.getMessage()));
+	public ResponseEntity<ErrorResource> handleInvalidDocumentNumber(InvalidDocumentNumberException ex) {
+		return buildErrorResponse(HttpStatus.BAD_REQUEST, "INVALID_DOCUMENT_NUMBER", "Invalid document number", ex);
 	}
 
 	@ExceptionHandler(UserNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleUserNotFound(UserNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "user_not_found"));
+	public ResponseEntity<ErrorResource> handleUserNotFound(UserNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "User not found", ex);
 	}
 
 	@ExceptionHandler(UserAlreadyLinkedException.class)
-	public ResponseEntity<Map<String, String>> handleUserAlreadyLinked(UserAlreadyLinkedException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "user_already_linked"));
+	public ResponseEntity<ErrorResource> handleUserAlreadyLinked(UserAlreadyLinkedException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "USER_ALREADY_LINKED",
+				"User already linked to a guest", ex);
 	}
 
 	@ExceptionHandler(RoomTypeNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleRoomTypeNotFound(RoomTypeNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "room_type_not_found"));
+	public ResponseEntity<ErrorResource> handleRoomTypeNotFound(RoomTypeNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "ROOM_TYPE_NOT_FOUND", "Room type not found", ex);
 	}
 
 	@ExceptionHandler(RoomNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleRoomNotFound(RoomNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "room_not_found"));
+	public ResponseEntity<ErrorResource> handleRoomNotFound(RoomNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "ROOM_NOT_FOUND", "Room not found", ex);
 	}
 
 	@ExceptionHandler(RateEntityNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleRateEntityNotFound(RateEntityNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "rate_not_found"));
+	public ResponseEntity<ErrorResource> handleRateEntityNotFound(RateEntityNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "RATE_NOT_FOUND", "Rate not found", ex);
 	}
 
 	@ExceptionHandler(DuplicateRoomTypeException.class)
-	public ResponseEntity<Map<String, String>> handleDuplicateRoomType(DuplicateRoomTypeException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "duplicate_room_type"));
+	public ResponseEntity<ErrorResource> handleDuplicateRoomType(DuplicateRoomTypeException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "DUPLICATE_ROOM_TYPE", "Room type already exists", ex);
 	}
 
 	@ExceptionHandler(DuplicateRoomNumberException.class)
-	public ResponseEntity<Map<String, String>> handleDuplicateRoomNumber(DuplicateRoomNumberException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "duplicate_room_number"));
+	public ResponseEntity<ErrorResource> handleDuplicateRoomNumber(DuplicateRoomNumberException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "DUPLICATE_ROOM_NUMBER", "Room number already exists", ex);
 	}
 
 	@ExceptionHandler(RateOverlapException.class)
-	public ResponseEntity<Map<String, Object>> handleRateOverlap(RateOverlapException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT)
-				.body(Map.of("error", "rate_overlap", "conflicts", ex.getConflicts()));
+	public ResponseEntity<ErrorResource> handleRateOverlap(RateOverlapException ex) {
+		var conflicts = ex.getConflicts();
+		var details = conflicts.isEmpty()
+				? safeMessage(ex)
+				: "Conflicting dates: " + conflicts.stream()
+						.map(LocalDate::toString)
+						.collect(Collectors.joining(", "));
+		return buildErrorResponse(HttpStatus.CONFLICT, "RATE_OVERLAP", "Rate overlaps an existing period", details);
 	}
 
 	@ExceptionHandler(InvalidRoomStatusTransitionException.class)
-	public ResponseEntity<Map<String, String>> handleInvalidRoomStatus(InvalidRoomStatusTransitionException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(
-				Map.of("error", "invalid_status_transition", "from", ex.getFrom().name(), "to", ex.getTo().name()));
+	public ResponseEntity<ErrorResource> handleInvalidRoomStatus(InvalidRoomStatusTransitionException ex) {
+		var details = "Cannot transition from %s to %s".formatted(ex.getFrom().name(), ex.getTo().name());
+		return buildErrorResponse(HttpStatus.CONFLICT, "INVALID_STATUS_TRANSITION",
+				"Invalid room status transition", details);
 	}
 
 	@ExceptionHandler(RoomTypeInUseException.class)
-	public ResponseEntity<Map<String, String>> handleRoomTypeInUse(RoomTypeInUseException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "room_type_in_use"));
+	public ResponseEntity<ErrorResource> handleRoomTypeInUse(RoomTypeInUseException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "ROOM_TYPE_IN_USE", "Room type is in use", ex);
 	}
 
 	@ExceptionHandler(RoomInUseException.class)
-	public ResponseEntity<Map<String, String>> handleRoomInUse(RoomInUseException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "room_in_use"));
+	public ResponseEntity<ErrorResource> handleRoomInUse(RoomInUseException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "ROOM_IN_USE", "Room is in use", ex);
 	}
 
 	@ExceptionHandler(OccupiedRoomTypeChangeException.class)
-	public ResponseEntity<Map<String, String>> handleOccupiedRoomTypeChange(OccupiedRoomTypeChangeException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "occupied_room_type_change"));
+	public ResponseEntity<ErrorResource> handleOccupiedRoomTypeChange(OccupiedRoomTypeChangeException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "OCCUPIED_ROOM_TYPE_CHANGE",
+				"Room type cannot change while occupied", ex);
 	}
 
 	@ExceptionHandler(RateCannotBeDeletedException.class)
-	public ResponseEntity<Map<String, String>> handleRateCannotBeDeleted(RateCannotBeDeletedException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "rate_cannot_be_deleted"));
+	public ResponseEntity<ErrorResource> handleRateCannotBeDeleted(RateCannotBeDeletedException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "RATE_CANNOT_BE_DELETED", "Rate cannot be deleted", ex);
 	}
 
 	@ExceptionHandler(RateNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleRateNotFound(RateNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-				.body(Map.of("error", "rate_not_found", "date", ex.getDate().toString()));
+	public ResponseEntity<ErrorResource> handleRateNotFound(RateNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.UNPROCESSABLE_CONTENT, "RATE_NOT_FOUND",
+				"Rate not found", "No effective rate for date: " + ex.getDate());
 	}
 
 	@ExceptionHandler(com.swissotel.swissotel360.reservations.domain.exceptions.GuestNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleReservationGuestNotFound(
+	public ResponseEntity<ErrorResource> handleReservationGuestNotFound(
 			com.swissotel.swissotel360.reservations.domain.exceptions.GuestNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "guest_not_found"));
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "GUEST_NOT_FOUND", "Guest not found", ex);
 	}
 
 	@ExceptionHandler(com.swissotel.swissotel360.reservations.domain.exceptions.RoomTypeNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleReservationRoomTypeNotFound(
+	public ResponseEntity<ErrorResource> handleReservationRoomTypeNotFound(
 			com.swissotel.swissotel360.reservations.domain.exceptions.RoomTypeNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "room_type_not_found"));
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "ROOM_TYPE_NOT_FOUND", "Room type not found", ex);
 	}
 
 	@ExceptionHandler(ReservationNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleReservationNotFound(ReservationNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "reservation_not_found"));
+	public ResponseEntity<ErrorResource> handleReservationNotFound(ReservationNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "RESERVATION_NOT_FOUND", "Reservation not found", ex);
 	}
 
 	@ExceptionHandler(InvalidStayPeriodException.class)
-	public ResponseEntity<Map<String, String>> handleInvalidStayPeriod(InvalidStayPeriodException ex) {
-		return ResponseEntity.badRequest().body(Map.of("error", "invalid_stay_period", "reason", ex.getReason()));
+	public ResponseEntity<ErrorResource> handleInvalidStayPeriod(InvalidStayPeriodException ex) {
+		var reason = ex.getReason();
+		var details = reason != null && !reason.isBlank() ? reason : safeMessage(ex);
+		return buildErrorResponse(HttpStatus.BAD_REQUEST, "INVALID_STAY_PERIOD", "Invalid stay period", details);
 	}
 
 	@ExceptionHandler(NoAvailabilityException.class)
-	public ResponseEntity<Map<String, String>> handleNoAvailability(NoAvailabilityException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "no_availability"));
+	public ResponseEntity<ErrorResource> handleNoAvailability(NoAvailabilityException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "NO_AVAILABILITY", "No room availability", ex);
 	}
 
 	@ExceptionHandler(DuplicateReservationException.class)
-	public ResponseEntity<Map<String, String>> handleDuplicateReservation(DuplicateReservationException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "duplicate_reservation"));
+	public ResponseEntity<ErrorResource> handleDuplicateReservation(DuplicateReservationException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "DUPLICATE_RESERVATION", "Duplicate reservation", ex);
 	}
 
 	@ExceptionHandler(InvalidReservationTransitionException.class)
-	public ResponseEntity<Map<String, String>> handleInvalidReservationTransition(
+	public ResponseEntity<ErrorResource> handleInvalidReservationTransition(
 			InvalidReservationTransitionException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(
-				Map.of("error", "invalid_status_transition", "from", ex.getFrom().code(), "to", ex.getTo().code()));
+		var details = "Cannot transition from %s to %s".formatted(ex.getFrom().code(), ex.getTo().code());
+		return buildErrorResponse(HttpStatus.CONFLICT, "INVALID_STATUS_TRANSITION",
+				"Invalid reservation status transition", details);
 	}
 
 	@ExceptionHandler(ReservationNotModifiableException.class)
-	public ResponseEntity<Map<String, String>> handleReservationNotModifiable(ReservationNotModifiableException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "reservation_not_modifiable"));
+	public ResponseEntity<ErrorResource> handleReservationNotModifiable(ReservationNotModifiableException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "RESERVATION_NOT_MODIFIABLE",
+				"Reservation is not modifiable", ex);
 	}
 
 	@ExceptionHandler(GuestProfileRequiredException.class)
-	public ResponseEntity<Map<String, String>> handleGuestProfileRequired(GuestProfileRequiredException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "guest_profile_required"));
+	public ResponseEntity<ErrorResource> handleGuestProfileRequired(GuestProfileRequiredException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "GUEST_PROFILE_REQUIRED", "Guest profile required", ex);
 	}
 
 	@ExceptionHandler(com.swissotel.swissotel360.reservations.domain.exceptions.RateNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleReservationRateNotFound(
+	public ResponseEntity<ErrorResource> handleReservationRateNotFound(
 			com.swissotel.swissotel360.reservations.domain.exceptions.RateNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-				.body(Map.of("error", "rate_not_found", "date", ex.getDate().toString()));
+		return buildErrorResponse(HttpStatus.UNPROCESSABLE_CONTENT, "RATE_NOT_FOUND",
+				"Rate not found", "No rate configured for date: " + ex.getDate());
 	}
 
 	@ExceptionHandler(StayNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleStayNotFound(StayNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "stay_not_found"));
+	public ResponseEntity<ErrorResource> handleStayNotFound(StayNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "STAY_NOT_FOUND", "Stay not found", ex);
 	}
 
 	@ExceptionHandler(StayReservationNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleStayReservationNotFound(StayReservationNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "reservation_not_found"));
+	public ResponseEntity<ErrorResource> handleStayReservationNotFound(StayReservationNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "RESERVATION_NOT_FOUND", "Reservation not found", ex);
 	}
 
 	@ExceptionHandler(DigitalKeyNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleDigitalKeyNotFound(DigitalKeyNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "digital_key_not_found"));
+	public ResponseEntity<ErrorResource> handleDigitalKeyNotFound(DigitalKeyNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "DIGITAL_KEY_NOT_FOUND", "Digital key not found", ex);
 	}
 
 	@ExceptionHandler(ReservationNotEligibleForCheckInException.class)
-	public ResponseEntity<Map<String, String>> handleReservationNotEligibleForCheckIn(ReservationNotEligibleForCheckInException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "reservation_not_eligible_for_check_in"));
+	public ResponseEntity<ErrorResource> handleReservationNotEligibleForCheckIn(
+			ReservationNotEligibleForCheckInException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "RESERVATION_NOT_ELIGIBLE_FOR_CHECK_IN",
+				"Reservation not eligible for check-in", ex);
 	}
 
 	@ExceptionHandler(RoomNotAvailableException.class)
-	public ResponseEntity<Map<String, String>> handleRoomNotAvailable(RoomNotAvailableException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "room_not_available"));
+	public ResponseEntity<ErrorResource> handleRoomNotAvailable(RoomNotAvailableException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "ROOM_NOT_AVAILABLE", "Room not available", ex);
 	}
 
 	@ExceptionHandler(ServiceRequestNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleServiceRequestNotFound(ServiceRequestNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "service_request_not_found"));
+	public ResponseEntity<ErrorResource> handleServiceRequestNotFound(ServiceRequestNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "SERVICE_REQUEST_NOT_FOUND",
+				"Service request not found", ex);
 	}
 
 	@ExceptionHandler(ServiceTypeNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleServiceTypeNotFound(ServiceTypeNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "service_type_not_found"));
+	public ResponseEntity<ErrorResource> handleServiceTypeNotFound(ServiceTypeNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "SERVICE_TYPE_NOT_FOUND", "Service type not found", ex);
 	}
 
 	@ExceptionHandler(ServiceRequestStayNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleServiceRequestStayNotFound(ServiceRequestStayNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "stay_not_found"));
+	public ResponseEntity<ErrorResource> handleServiceRequestStayNotFound(ServiceRequestStayNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "STAY_NOT_FOUND", "Stay not found", ex);
 	}
 
 	@ExceptionHandler(StayNotActiveForRequestException.class)
-	public ResponseEntity<Map<String, String>> handleStayNotActiveForRequest(StayNotActiveForRequestException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "stay_not_active"));
+	public ResponseEntity<ErrorResource> handleStayNotActiveForRequest(StayNotActiveForRequestException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "STAY_NOT_ACTIVE", "Stay is not active", ex);
 	}
 
 	@ExceptionHandler(InvalidServiceRequestTransitionException.class)
-	public ResponseEntity<Map<String, String>> handleInvalidServiceRequestTransition(InvalidServiceRequestTransitionException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "invalid_service_request_transition"));
+	public ResponseEntity<ErrorResource> handleInvalidServiceRequestTransition(
+			InvalidServiceRequestTransitionException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "INVALID_SERVICE_REQUEST_TRANSITION",
+				"Invalid service request transition", ex);
 	}
 
 	@ExceptionHandler(StayAlreadyClosedException.class)
-	public ResponseEntity<Map<String, String>> handleStayAlreadyClosed(StayAlreadyClosedException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "stay_already_closed"));
+	public ResponseEntity<ErrorResource> handleStayAlreadyClosed(StayAlreadyClosedException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "STAY_ALREADY_CLOSED", "Stay is already closed", ex);
 	}
 
 	@ExceptionHandler(GuestDocumentMismatchException.class)
-	public ResponseEntity<Map<String, String>> handleGuestDocumentMismatch(GuestDocumentMismatchException ex) {
-		return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", "guest_document_mismatch"));
+	public ResponseEntity<ErrorResource> handleGuestDocumentMismatch(GuestDocumentMismatchException ex) {
+		return buildErrorResponse(HttpStatus.UNPROCESSABLE_CONTENT, "GUEST_DOCUMENT_MISMATCH",
+				"Guest document does not match reservation", ex);
 	}
 
 	@ExceptionHandler(FolioNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleFolioNotFound(FolioNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "folio_not_found"));
+	public ResponseEntity<ErrorResource> handleFolioNotFound(FolioNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "FOLIO_NOT_FOUND", "Folio not found", ex);
 	}
 
 	@ExceptionHandler(FolioClosedException.class)
-	public ResponseEntity<Map<String, String>> handleFolioClosed(FolioClosedException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "folio_closed"));
+	public ResponseEntity<ErrorResource> handleFolioClosed(FolioClosedException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "FOLIO_CLOSED", "Folio is closed", ex);
 	}
 
 	@ExceptionHandler(PaymentMethodNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handlePaymentMethodNotFound(PaymentMethodNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "payment_method_not_found"));
+	public ResponseEntity<ErrorResource> handlePaymentMethodNotFound(PaymentMethodNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "PAYMENT_METHOD_NOT_FOUND",
+				"Payment method not found", ex);
 	}
 
 	@ExceptionHandler(PaymentAmountMismatchException.class)
-	public ResponseEntity<Map<String, String>> handlePaymentAmountMismatch(PaymentAmountMismatchException ex) {
-		return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(Map.of("error", "payment_amount_mismatch"));
+	public ResponseEntity<ErrorResource> handlePaymentAmountMismatch(PaymentAmountMismatchException ex) {
+		return buildErrorResponse(HttpStatus.UNPROCESSABLE_CONTENT, "PAYMENT_AMOUNT_MISMATCH",
+				"Payment amount mismatch", ex);
 	}
 
 	@ExceptionHandler(FolioAlreadyPaidException.class)
-	public ResponseEntity<Map<String, String>> handleFolioAlreadyPaid(FolioAlreadyPaidException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "folio_already_paid"));
+	public ResponseEntity<ErrorResource> handleFolioAlreadyPaid(FolioAlreadyPaidException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "FOLIO_ALREADY_PAID", "Folio is already paid", ex);
 	}
 
 	@ExceptionHandler(PaymentNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handlePaymentNotFound(PaymentNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "payment_not_found"));
+	public ResponseEntity<ErrorResource> handlePaymentNotFound(PaymentNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "PAYMENT_NOT_FOUND", "Payment not found", ex);
 	}
 
 	@ExceptionHandler(PaymentNotProcessedException.class)
-	public ResponseEntity<Map<String, String>> handlePaymentNotProcessed(PaymentNotProcessedException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "payment_not_processed"));
+	public ResponseEntity<ErrorResource> handlePaymentNotProcessed(PaymentNotProcessedException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "PAYMENT_NOT_PROCESSED", "Payment is not processed", ex);
 	}
 
 	@ExceptionHandler(InvoiceAlreadyIssuedException.class)
-	public ResponseEntity<Map<String, String>> handleInvoiceAlreadyIssued(InvoiceAlreadyIssuedException ex) {
-		return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "invoice_already_issued"));
+	public ResponseEntity<ErrorResource> handleInvoiceAlreadyIssued(InvoiceAlreadyIssuedException ex) {
+		return buildErrorResponse(HttpStatus.CONFLICT, "INVOICE_ALREADY_ISSUED", "Invoice already issued", ex);
 	}
 
 	@ExceptionHandler(ChargeServiceRequestNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleChargeServiceRequestNotFound(ChargeServiceRequestNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "service_request_not_found"));
+	public ResponseEntity<ErrorResource> handleChargeServiceRequestNotFound(
+			ChargeServiceRequestNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "SERVICE_REQUEST_NOT_FOUND",
+				"Service request not found", ex);
 	}
 
 	@ExceptionHandler(BillingStayNotFoundException.class)
-	public ResponseEntity<Map<String, String>> handleBillingStayNotFound(BillingStayNotFoundException ex) {
-		return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "stay_not_found"));
+	public ResponseEntity<ErrorResource> handleBillingStayNotFound(BillingStayNotFoundException ex) {
+		return buildErrorResponse(HttpStatus.NOT_FOUND, "STAY_NOT_FOUND", "Stay not found", ex);
 	}
 
-	@ExceptionHandler({ MethodArgumentTypeMismatchException.class,
-			org.springframework.http.converter.HttpMessageNotReadableException.class })
-	public ResponseEntity<Map<String, String>> handleInvalidRequestFormat(Exception ex) {
-		return ResponseEntity.badRequest().body(Map.of("error", "invalid_request", "message",
-				ex.getMessage() == null ? "Invalid request value" : ex.getMessage()));
+	@ExceptionHandler(MethodArgumentTypeMismatchException.class)
+	public ResponseEntity<ErrorResource> handleMethodArgumentTypeMismatch(MethodArgumentTypeMismatchException ex) {
+		var parameterName = ex.getName();
+		var safeParameterName = parameterName != null && !parameterName.isBlank() ? parameterName : "unknown";
+		return buildErrorResponse(
+				HttpStatus.BAD_REQUEST,
+				"INVALID_REQUEST",
+				"Invalid request parameter",
+				"Invalid value for parameter '" + safeParameterName + "'");
+	}
+
+	@ExceptionHandler(HttpMessageNotReadableException.class)
+	public ResponseEntity<ErrorResource> handleHttpMessageNotReadable(HttpMessageNotReadableException ex) {
+		return buildErrorResponse(
+				HttpStatus.BAD_REQUEST,
+				"INVALID_REQUEST",
+				"Invalid request body",
+				"Malformed JSON payload or invalid field value");
 	}
 
 	/**
@@ -343,7 +383,7 @@ public class GlobalExceptionHandler {
 	 * @return error response with BAD_REQUEST status
 	 */
 	@ExceptionHandler(MethodArgumentNotValidException.class)
-	public ResponseEntity<?> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
+	public ResponseEntity<ErrorResource> handleMethodArgumentNotValid(MethodArgumentNotValidException ex) {
 		var fieldErrors = ex.getBindingResult().getFieldErrors();
 		var validationPrefix = resolveMessageOrDefault("validation.field.prefix", "Field");
 		var errorDetails = fieldErrors.isEmpty()
@@ -369,44 +409,68 @@ public class GlobalExceptionHandler {
 	 * @return error response with BAD_REQUEST status
 	 */
 	@ExceptionHandler(IllegalArgumentException.class)
-	public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException ex) {
+	public ResponseEntity<ErrorResource> handleIllegalArgumentException(IllegalArgumentException ex) {
+		var message = safeMessage(ex);
 		var applicationError = ApplicationError.validationError(
 				resolveMessageOrDefault("validation.request.argument", "request-argument"),
-				ex.getMessage() != null ? ex.getMessage()
+				message != null ? message
 						: resolveMessageOrDefault("validation.request.failed", "Request validation failed"));
 		return ErrorResponseAssembler.toErrorResponseFromApplicationError(applicationError);
 	}
 
 	/**
 	 * Handles unexpected runtime exceptions not caught by specific handlers.
-	 * Maps to a generic unexpected error response.
+	 * Maps to a generic unexpected error response without exposing internal details.
 	 *
 	 * @param ex
 	 *               the unhandled runtime exception
 	 * @return error response with INTERNAL_SERVER_ERROR status
 	 */
 	@ExceptionHandler(RuntimeException.class)
-	public ResponseEntity<?> handleRuntimeException(RuntimeException ex) {
+	public ResponseEntity<ErrorResource> handleRuntimeException(RuntimeException ex) {
+		log.error("Unhandled exception", ex);
 		var applicationError = ApplicationError.unexpected(
 				resolveMessageOrDefault("error.unexpected.context", "global-exception-handler"),
-				ex.getMessage() != null ? ex.getMessage() : "An unexpected error occurred");
+				"An unexpected internal error occurred");
 		return ErrorResponseAssembler.toErrorResponseFromApplicationError(applicationError);
 	}
 
 	/**
 	 * Handles all other exceptions not matched by specific handlers.
-	 * Provides a final fallback for any unexpected exception type.
+	 * Provides a final fallback for any unexpected exception type without exposing internal details.
 	 *
 	 * @param ex
 	 *               the exception
 	 * @return error response with INTERNAL_SERVER_ERROR status
 	 */
 	@ExceptionHandler(Exception.class)
-	public ResponseEntity<?> handleException(Exception ex) {
+	public ResponseEntity<ErrorResource> handleException(Exception ex) {
+		log.error("Unhandled exception", ex);
 		var applicationError = ApplicationError.unexpected(
 				resolveMessageOrDefault("error.unexpected.context", "global-exception-handler"),
-				ex.getMessage() != null ? ex.getMessage() : "An unexpected error occurred");
+				"An unexpected internal error occurred");
 		return ErrorResponseAssembler.toErrorResponseFromApplicationError(applicationError);
+	}
+
+	private static ResponseEntity<ErrorResource> buildErrorResponse(
+			HttpStatusCode status,
+			String code,
+			String message,
+			Exception ex) {
+		return buildErrorResponse(status, code, message, safeMessage(ex));
+	}
+
+	private static ResponseEntity<ErrorResource> buildErrorResponse(
+			HttpStatusCode status,
+			String code,
+			String message,
+			@Nullable String details) {
+		return ResponseEntity.status(status).body(new ErrorResource(code, message, details));
+	}
+
+	private static @Nullable String safeMessage(Exception ex) {
+		var message = ex.getMessage();
+		return message == null || message.isBlank() ? null : message;
 	}
 
 	private String resolveMessageOrDefault(String key, String defaultValue, Object... args) {

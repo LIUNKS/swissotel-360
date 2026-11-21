@@ -10,6 +10,15 @@ public enum PaymentStatus {
 	}
 
 	public static PaymentStatus fromCode(String code) {
-		return valueOf(code.toUpperCase(Locale.ROOT));
+		if (code == null || code.isBlank()) {
+			throw new IllegalArgumentException("Invalid payment status: " + code);
+		}
+		var normalized = code.trim().toUpperCase(Locale.ROOT);
+		for (var value : values()) {
+			if (value.name().equals(normalized)) {
+				return value;
+			}
+		}
+		throw new IllegalArgumentException("Invalid payment status: " + code);
 	}
 }

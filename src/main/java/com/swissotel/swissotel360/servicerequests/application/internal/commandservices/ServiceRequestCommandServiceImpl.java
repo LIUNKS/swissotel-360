@@ -31,6 +31,12 @@ public final class ServiceRequestCommandServiceImpl implements ServiceRequestCom
 	public ServiceRequest create(CreateServiceRequestCommand command) {
 		var stay = collaborators.findStay(command.stayPublicId())
 				.orElseThrow(() -> new ServiceRequestStayNotFoundException(command.stayPublicId()));
+		if (collaborators.isCurrentUserGuest()) {
+			var ownGuestId = collaborators.currentGuestId();
+			if (ownGuestId.isEmpty() || !ownGuestId.get().equals(stay.guestId())) {
+				throw new ServiceRequestStayNotFoundException(command.stayPublicId());
+			}
+		}
 		if (!"active".equals(stay.status()))
 			throw new StayNotActiveForRequestException(command.stayPublicId());
 		var type = requests.findServiceTypeByCode(command.serviceTypeCode().trim())

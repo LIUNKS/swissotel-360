@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/rooms")
+@RequestMapping("/api/v1/rooms")
 @Tag(name = "Rooms", description = "Physical room inventory and status management")
 public class RoomController {
 	private final RoomCommandService commands;

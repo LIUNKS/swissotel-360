@@ -15,7 +15,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/invoices")
+@RequestMapping("/api/v1/invoices")
 @Tag(name = "Invoices", description = "Receipts and invoices")
 public class InvoiceController {
 	private final BillingCommandService commands;

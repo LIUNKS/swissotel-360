@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/v1")
 @Tag(name = "Payments", description = "Payment methods and folio payments")
 public class PaymentController {
 	private final BillingCommandService commands;

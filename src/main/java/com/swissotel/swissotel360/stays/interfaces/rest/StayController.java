@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/stays")
+@RequestMapping("/api/v1/stays")
 @Tag(name = "Stays", description = "Guest check-in and check-out")
 public class StayController {
 	private final StayCommandService commands;

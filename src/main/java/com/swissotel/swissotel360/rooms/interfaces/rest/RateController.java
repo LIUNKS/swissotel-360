@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/room-types/{roomTypePublicId}/rates")
+@RequestMapping("/api/v1/room-types/{roomTypePublicId}/rates")
 @Tag(name = "Room rates", description = "Room rate history and scheduling")
 public class RateController {
 	private final RateCommandService commands;

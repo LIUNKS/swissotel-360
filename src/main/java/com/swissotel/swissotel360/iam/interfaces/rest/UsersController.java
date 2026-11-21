@@ -8,6 +8,7 @@ import com.swissotel.swissotel360.iam.interfaces.rest.resources.CreateUserResour
 import com.swissotel.swissotel360.iam.interfaces.rest.resources.UserResource;
 import com.swissotel.swissotel360.iam.interfaces.rest.transform.CreateUserCommandFromResourceAssembler;
 import com.swissotel.swissotel360.iam.interfaces.rest.transform.UserResourceFromEntityAssembler;
+import com.swissotel.swissotel360.shared.application.result.ApplicationError;
 import com.swissotel.swissotel360.shared.application.result.Result;
 import com.swissotel.swissotel360.shared.interfaces.rest.resources.ErrorResource;
 import com.swissotel.swissotel360.shared.interfaces.rest.transform.ErrorResponseAssembler;
@@ -80,19 +81,21 @@ public class UsersController {
 	 * @see UserResource
 	 */
 	@GetMapping(value = "/{userId}")
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER') or @userAccessAuthorizationService.isSelf(authentication, #userId)")
 	@Operation(summary = "Get user by ID", description = "Retrieves a specific user's information by unique identifier.", security = @SecurityRequirement(name = "bearerAuth"))
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "User retrieved successfully", content = @Content(schema = @Schema(implementation = UserResource.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized - JWT token required or invalid", content = @Content),
 			@ApiResponse(responseCode = "403", description = "Forbidden - Insufficient permissions", content = @Content),
-			@ApiResponse(responseCode = "404", description = "User not found", content = @Content)
+			@ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ErrorResource.class)))
 	})
-	public ResponseEntity<UserResource> getUserById(
+	public ResponseEntity<?> getUserById(
 			@PathVariable @Parameter(description = "Unique user identifier", example = "1", required = true) Long userId) {
 		var getUserByIdQuery = new GetUserByIdQuery(userId);
 		var user = userQueryService.handle(getUserByIdQuery);
 		if (user.isEmpty()) {
-			return ResponseEntity.notFound().build();
+			return ErrorResponseAssembler.toErrorResponseFromApplicationError(
+					ApplicationError.notFound("user", String.valueOf(userId)));
 		}
 		var userResource = UserResourceFromEntityAssembler.toResourceFromEntity(user.get());
 		return ResponseEntity.ok(userResource);

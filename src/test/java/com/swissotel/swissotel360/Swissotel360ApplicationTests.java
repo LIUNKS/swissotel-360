@@ -27,15 +27,15 @@ class Swissotel360ApplicationTests {
 	void protectedBoundedContextEndpointsRequireAuthentication(@LocalServerPort int port) throws Exception {
 		var publicId = UUID.randomUUID();
 		var paths = List.of(
-				"/api/rooms",
-				"/api/room-types",
-				"/api/room-types/" + publicId,
-				"/api/room-types/" + publicId + "/rates",
-				"/api/availability?checkIn=2026-11-01&checkOut=2026-11-03",
-				"/api/room-types/" + publicId + "/quote?checkIn=2026-11-01&checkOut=2026-11-03",
-				"/api/reservations",
-				"/api/reservations/" + publicId,
-				"/api/reservations/by-code/SW26-7H3KQ9XA");
+				"/api/v1/rooms",
+				"/api/v1/room-types",
+				"/api/v1/room-types/" + publicId,
+				"/api/v1/room-types/" + publicId + "/rates",
+				"/api/v1/availability?checkIn=2026-11-01&checkOut=2026-11-03",
+				"/api/v1/room-types/" + publicId + "/quote?checkIn=2026-11-01&checkOut=2026-11-03",
+				"/api/v1/reservations",
+				"/api/v1/reservations/" + publicId,
+				"/api/v1/reservations/by-code/SW26-7H3KQ9XA");
 
 		try (var client = HttpClient.newHttpClient()) {
 			for (var path : paths) {
