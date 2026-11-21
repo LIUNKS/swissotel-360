@@ -4,6 +4,7 @@ import com.swissotel.swissotel360.iam.infrastructure.authorization.sfs.pipeline.
 import com.swissotel.swissotel360.iam.infrastructure.hashing.bcrypt.BCryptHashingService;
 import com.swissotel.swissotel360.iam.infrastructure.tokens.jwt.BearerTokenService;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,6 +20,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -41,6 +43,8 @@ public class WebSecurityConfiguration {
 	private final BCryptHashingService hashingService;
 
 	private final AuthenticationEntryPoint unauthorizedRequestHandler;
+
+	private final List<String> allowedOriginPatterns;
 
 	/**
 	 * This method creates the Bearer Authorization Request Filter.
@@ -109,7 +113,7 @@ public class WebSecurityConfiguration {
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.cors(configurer -> configurer.configurationSource(_ -> {
 			var cors = new CorsConfiguration();
-			cors.setAllowedOriginPatterns(List.of("*"));
+			cors.setAllowedOriginPatterns(allowedOriginPatterns);
 			cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 			cors.setAllowedHeaders(List.of("*"));
 			cors.setAllowCredentials(true);
@@ -121,7 +125,9 @@ public class WebSecurityConfiguration {
 				.sessionManagement(customizer -> customizer.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 				.authorizeHttpRequests(authorizeRequests -> authorizeRequests
 						.requestMatchers(
-								"/api/v1/authentication/**",
+								"/api/v1/authentication/sign-in",
+								"/api/v1/authentication/sign-up",
+								"/api/v1/authentication/sign-out",
 								"/v3/api-docs/**",
 								"/swagger-ui.html",
 								"/swagger-ui/**",
@@ -146,13 +152,20 @@ public class WebSecurityConfiguration {
 	 *                                     The hashing service
 	 * @param authenticationEntryPoint
 	 *                                     The authentication entry point
+	 * @param corsAllowedOrigins
+	 *                                     Comma-separated allowed origin patterns for CORS
 	 */
 	public WebSecurityConfiguration(@Qualifier("defaultUserDetailsService") UserDetailsService userDetailsService,
 			BearerTokenService tokenService, BCryptHashingService hashingService,
-			AuthenticationEntryPoint authenticationEntryPoint) {
+			AuthenticationEntryPoint authenticationEntryPoint,
+			@Value("${cors.allowed-origins:http://localhost:4200,http://localhost:3000,http://localhost:8080}") String corsAllowedOrigins) {
 		this.userDetailsService = userDetailsService;
 		this.tokenService = tokenService;
 		this.hashingService = hashingService;
 		this.unauthorizedRequestHandler = authenticationEntryPoint;
+		this.allowedOriginPatterns = Arrays.stream(corsAllowedOrigins.split(","))
+				.map(String::trim)
+				.filter(origin -> !origin.isBlank())
+				.toList();
 	}
 }

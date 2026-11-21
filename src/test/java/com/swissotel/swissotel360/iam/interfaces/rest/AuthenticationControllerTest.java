@@ -3,8 +3,10 @@ package com.swissotel.swissotel360.iam.interfaces.rest;
 import com.swissotel.swissotel360.iam.application.internal.commandservices.UserCommandServiceImpl;
 import com.swissotel.swissotel360.iam.application.internal.outboundservices.hashing.HashingService;
 import com.swissotel.swissotel360.iam.application.internal.outboundservices.tokens.TokenService;
+import com.swissotel.swissotel360.iam.application.queryservices.UserQueryService;
 import com.swissotel.swissotel360.iam.domain.model.aggregates.User;
 import com.swissotel.swissotel360.iam.domain.model.entities.Role;
+import com.swissotel.swissotel360.iam.domain.model.queries.GetUserByEmailQuery;
 import com.swissotel.swissotel360.iam.domain.model.valueobjects.Roles;
 import com.swissotel.swissotel360.iam.domain.repositories.RoleRepository;
 import com.swissotel.swissotel360.iam.domain.repositories.UserRepository;
@@ -17,7 +19,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
@@ -36,7 +40,9 @@ class AuthenticationControllerTest {
 	private final RoleRepository roleRepository = mock(RoleRepository.class);
 	private final HashingService hashingService = mock(HashingService.class);
 	private final TokenService tokenService = mock(TokenService.class);
+	private final UserQueryService userQueryService = mock(UserQueryService.class);
 
+	private UserCommandServiceImpl userCommandService;
 	private AuthenticationController controller;
 	private Locale previousDefaultLocale;
 
@@ -45,8 +51,8 @@ class AuthenticationControllerTest {
 		previousDefaultLocale = Locale.getDefault();
 		Locale.setDefault(Locale.ENGLISH);
 		LocaleContextHolder.setLocale(Locale.ENGLISH);
-		var userCommandService = new UserCommandServiceImpl(userRepository, roleRepository, hashingService, tokenService);
-		controller = new AuthenticationController(userCommandService);
+		userCommandService = new UserCommandServiceImpl(userRepository, roleRepository, hashingService, tokenService);
+		controller = new AuthenticationController(userCommandService, userQueryService, false, "Lax", 7L);
 	}
 
 	@AfterEach
@@ -110,8 +116,81 @@ class AuthenticationControllerTest {
 		var setCookie = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
 		assertNotNull(setCookie);
 		assertTrue(setCookie.contains("token=jwt-token-value"));
+		assertTrue(setCookie.contains("HttpOnly"));
+		assertTrue(setCookie.contains("SameSite=Lax"));
 		var body = assertInstanceOf(AuthenticatedUserResource.class, response.getBody());
 		assertEquals(userId, body.publicId());
 		assertEquals("john.doe@swissotel.com", body.email());
+	}
+
+	@Test
+	void signInIncludesSecureFlagWhenConfiguredForHttps() {
+		var secureController = new AuthenticationController(userCommandService, userQueryService, true, "Strict", 7L);
+		var existingUser = new User(
+				1L,
+				UUID.randomUUID(),
+				"John Doe",
+				"john.doe@swissotel.com",
+				"encoded-password",
+				new Role(1L, Roles.ROLE_GUEST),
+				"active",
+				null);
+
+		when(userRepository.findByEmail("john.doe@swissotel.com")).thenReturn(Optional.of(existingUser));
+		when(hashingService.matches("secretPassword123", "encoded-password")).thenReturn(true);
+		when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
+		when(tokenService.generateToken("john.doe@swissotel.com")).thenReturn("jwt-token-value");
+
+		var response = secureController.signIn(new SignInResource("john.doe@swissotel.com", "secretPassword123"));
+
+		assertEquals(HttpStatus.OK, response.getStatusCode());
+		var setCookie = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+		assertNotNull(setCookie);
+		assertTrue(setCookie.contains("Secure"));
+		assertTrue(setCookie.contains("SameSite=Strict"));
+	}
+
+	@Test
+	void signOutClearsSessionCookie() {
+		var response = controller.signOut();
+
+		assertEquals(HttpStatus.NO_CONTENT, response.getStatusCode());
+		var setCookie = response.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+		assertNotNull(setCookie);
+		assertTrue(setCookie.contains("token="));
+		assertTrue(setCookie.contains("Max-Age=0"));
+		assertTrue(setCookie.contains("HttpOnly"));
+		assertTrue(setCookie.contains("SameSite=Lax"));
+	}
+
+	@Test
+	void meReturnsAuthenticatedUserDetailsOr401WhenUserMissing() {
+		var userId = UUID.randomUUID();
+		var existingUser = new User(
+				1L,
+				userId,
+				"John Doe",
+				"john.doe@swissotel.com",
+				"encoded-password",
+				new Role(1L, Roles.ROLE_GUEST),
+				"active",
+				null);
+
+		when(userQueryService.handle(new GetUserByEmailQuery("john.doe@swissotel.com")))
+				.thenReturn(Optional.of(existingUser));
+		var auth = new UsernamePasswordAuthenticationToken("john.doe@swissotel.com", "n/a", List.of());
+
+		var okResponse = controller.me(auth);
+		assertEquals(HttpStatus.OK, okResponse.getStatusCode());
+		var body = assertInstanceOf(AuthenticatedUserResource.class, okResponse.getBody());
+		assertEquals(userId, body.publicId());
+		assertEquals("john.doe@swissotel.com", body.email());
+
+		when(userQueryService.handle(new GetUserByEmailQuery("missing@swissotel.com"))).thenReturn(Optional.empty());
+		var missingAuth = new UsernamePasswordAuthenticationToken("missing@swissotel.com", "n/a", List.of());
+		var missingResponse = controller.me(missingAuth);
+		assertEquals(HttpStatus.UNAUTHORIZED, missingResponse.getStatusCode());
+		var err = assertInstanceOf(ErrorResource.class, missingResponse.getBody());
+		assertEquals("UNAUTHORIZED", err.code());
 	}
 }
