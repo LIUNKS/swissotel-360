@@ -81,6 +81,7 @@ public class UsersController {
 	 * @see UserResource
 	 */
 	@GetMapping(value = "/{userId}")
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER') or @userAccessAuthorizationService.isSelf(authentication, #userId)")
 	@Operation(summary = "Get user by ID", description = "Retrieves a specific user's information by unique identifier.", security = @SecurityRequirement(name = "bearerAuth"))
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "User retrieved successfully", content = @Content(schema = @Schema(implementation = UserResource.class))),
