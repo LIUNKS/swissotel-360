@@ -42,7 +42,9 @@ public class RateRepositoryImpl implements RateRepository {
 	}
 
 	public List<Rate> findOverlapping(Long id, LocalDate from, LocalDate to) {
-		return repository.findOverlapping(id, from, to).stream().map(RoomsPersistenceAssembler::toDomain).toList();
+		var entities = to == null ? repository.findOverlappingOpenEnded(id, from)
+				: repository.findOverlappingClosed(id, from, to);
+		return entities.stream().map(RoomsPersistenceAssembler::toDomain).toList();
 	}
 
 	public Optional<Rate> findById(Long id) {

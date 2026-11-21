@@ -5,8 +5,6 @@ import com.swissotel.swissotel360.rooms.infrastructure.persistence.jpa.entities.
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,7 +17,9 @@ public interface RoomPersistenceRepository extends JpaRepository<RoomPersistence
 
 	long countByRoomType_IdAndStatusNot(Long roomTypeId, RoomStatus status);
 
-	@Query("select r from RoomPersistenceEntity r where (:typeId is null or r.roomType.id=:typeId) and (:status is null or r.status=:status)")
-	Page<RoomPersistenceEntity> findFiltered(@Param("typeId") Long typeId, @Param("status") RoomStatus status,
-			Pageable pageable);
+	Page<RoomPersistenceEntity> findByRoomType_Id(Long roomTypeId, Pageable pageable);
+
+	Page<RoomPersistenceEntity> findByStatus(RoomStatus status, Pageable pageable);
+
+	Page<RoomPersistenceEntity> findByRoomType_IdAndStatus(Long roomTypeId, RoomStatus status, Pageable pageable);
 }
