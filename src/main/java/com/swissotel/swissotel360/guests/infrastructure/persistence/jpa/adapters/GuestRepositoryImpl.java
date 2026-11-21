@@ -9,10 +9,12 @@ import com.swissotel.swissotel360.guests.infrastructure.persistence.jpa.reposito
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import java.util.Optional;
 import java.util.UUID;
 
 @Repository
+@Transactional(readOnly = true)
 public class GuestRepositoryImpl implements GuestRepository {
 	private final GuestPersistenceRepository guests;
 	private final DocumentTypePersistenceRepository documentTypes;
@@ -23,6 +25,7 @@ public class GuestRepositoryImpl implements GuestRepository {
 	}
 
 	@Override
+	@Transactional
 	public Guest save(Guest guest) {
 		var entity = guest.getId() == null
 				? new com.swissotel.swissotel360.guests.infrastructure.persistence.jpa.entities.GuestPersistenceEntity()
