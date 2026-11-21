@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping({ "/api/v1/guests", "/api/guests" })
+@RequestMapping("/api/v1/guests")
 @Tag(name = "Guests", description = "Guest identity and profile management")
 public class GuestController {
 	private final GuestCommandService commandService;

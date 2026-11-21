@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping({ "/api/v1/document-types", "/api/document-types" })
+@RequestMapping("/api/v1/document-types")
 @Tag(name = "Document types", description = "Supported identity document types")
 public class DocumentTypeController {
 	private final GuestQueryService queryService;

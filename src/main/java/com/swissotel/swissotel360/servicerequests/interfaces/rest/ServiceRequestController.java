@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/service-requests")
+@RequestMapping("/api/v1/service-requests")
 @Tag(name = "Service requests", description = "Guest service requests during a stay")
 public class ServiceRequestController {
 	private final ServiceRequestCommandService commands;

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/folios")
+@RequestMapping("/api/v1/folios")
 @Tag(name = "Folios", description = "Guest folios and charges")
 public class FolioController {
 	private final BillingCommandService commands;

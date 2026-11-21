@@ -17,7 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/digital-keys")
+@RequestMapping("/api/v1/digital-keys")
 @Tag(name = "Digital keys", description = "Digital room keys of active stays")
 public class DigitalKeyController {
 	private final StayCommandService commands;

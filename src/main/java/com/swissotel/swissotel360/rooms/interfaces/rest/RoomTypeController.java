@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/room-types")
+@RequestMapping("/api/v1/room-types")
 @Tag(name = "Room types", description = "Room type catalogue and management")
 public class RoomTypeController {
 	private final RoomTypeCommandService commands;

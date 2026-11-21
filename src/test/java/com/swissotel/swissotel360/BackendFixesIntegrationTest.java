@@ -59,7 +59,7 @@ class BackendFixesIntegrationTest {
 			assertNotNull(missingJson.get("message"));
 			assertFalse(missingJson.containsKey("error"));
 
-			var unauthResponse = get(client, port, "/api/rooms", null);
+			var unauthResponse = get(client, port, "/api/v1/rooms", null);
 			assertEquals(401, unauthResponse.statusCode());
 			var unauthJson = parseJsonObject(unauthResponse.body());
 			assertEquals("UNAUTHORIZED", unauthJson.get("code"));
@@ -98,11 +98,11 @@ class BackendFixesIntegrationTest {
 			}
 
 			var paths = List.of(
-					"/api/reservations?page=0&size=5",
-					"/api/reservations?status=pending",
-					"/api/reservations?guestPublicId=" + guestPublicId,
-					"/api/reservations?checkInFrom=2026-01-01&checkInTo=2026-12-31",
-					"/api/reservations?code=SW");
+					"/api/v1/reservations?page=0&size=5",
+					"/api/v1/reservations?status=pending",
+					"/api/v1/reservations?guestPublicId=" + guestPublicId,
+					"/api/v1/reservations?checkInFrom=2026-01-01&checkInTo=2026-12-31",
+					"/api/v1/reservations?code=SW");
 
 			for (var path : paths) {
 				var response = get(client, port, path, token);
@@ -124,7 +124,7 @@ class BackendFixesIntegrationTest {
 			var token = signInAsAdmin(client, port);
 
 			var roomTypeName = "VerifSuite-" + UUID.randomUUID().toString().substring(0, 8);
-			var createTypeResponse = postJson(client, port, "/api/room-types", token,
+			var createTypeResponse = postJson(client, port, "/api/v1/room-types", token,
 					"""
 							{"name":"%s","capacity":2,"description":"Temporary test room type"}
 							""".formatted(roomTypeName));
@@ -132,7 +132,7 @@ class BackendFixesIntegrationTest {
 			createdRoomTypePublicId = UUID.fromString(
 					JsonPath.parse(createTypeResponse.body()).read("$.publicId", String.class));
 
-			var rateBasePath = "/api/room-types/" + createdRoomTypePublicId + "/rates";
+			var rateBasePath = "/api/v1/room-types/" + createdRoomTypePublicId + "/rates";
 
 			var closedRateResponse = postJson(client, port, rateBasePath, token,
 					"""
@@ -170,10 +170,10 @@ class BackendFixesIntegrationTest {
 		try (var client = HttpClient.newHttpClient()) {
 			var token = signInAsAdmin(client, port);
 			var paths = List.of(
-					"/api/rooms",
-					"/api/rooms?status=AVAILABLE",
-					"/api/rooms?roomTypeId=1",
-					"/api/rooms?roomTypeId=1&status=AVAILABLE");
+					"/api/v1/rooms",
+					"/api/v1/rooms?status=AVAILABLE",
+					"/api/v1/rooms?roomTypeId=1",
+					"/api/v1/rooms?roomTypeId=1&status=AVAILABLE");
 
 			for (var path : paths) {
 				var response = get(client, port, path, token);
@@ -188,7 +188,7 @@ class BackendFixesIntegrationTest {
 		try (var client = HttpClient.newHttpClient()) {
 			var token = signInAsAdmin(client, port);
 
-			for (var invalidStatusPath : List.of("/api/reservations?status=zzz", "/api/rooms?status=zzz")) {
+			for (var invalidStatusPath : List.of("/api/v1/reservations?status=zzz", "/api/v1/rooms?status=zzz")) {
 				var response = get(client, port, invalidStatusPath, token);
 				assertEquals(400, response.statusCode(), response.body());
 				var json = parseJsonObject(response.body());
@@ -209,12 +209,26 @@ class BackendFixesIntegrationTest {
 			assertNotNull(userJson.get("message"));
 			assertFalse(userJson.containsKey("error"));
 
-			var roomTypeNotFound = get(client, port, "/api/room-types/" + UUID.randomUUID(), token);
+			var roomTypeNotFound = get(client, port, "/api/v1/room-types/" + UUID.randomUUID(), token);
 			assertEquals(404, roomTypeNotFound.statusCode(), roomTypeNotFound.body());
 			var roomTypeJson = parseJsonObject(roomTypeNotFound.body());
 			assertEquals("ROOM_TYPE_NOT_FOUND", roomTypeJson.get("code"));
 			assertNotNull(roomTypeJson.get("message"));
 			assertFalse(roomTypeJson.containsKey("error"));
+		}
+	}
+
+	@Test
+	void allOpenApiPathsUseApiV1Prefix(@LocalServerPort int port) throws Exception {
+		try (var client = HttpClient.newHttpClient()) {
+			var response = get(client, port, "/v3/api-docs", null);
+			assertEquals(200, response.statusCode(), response.body());
+			Map<String, Object> paths = JsonPath.parse(response.body()).read("$.paths");
+			assertNotNull(paths);
+			assertFalse(paths.isEmpty(), "Expected OpenAPI paths to be non-empty");
+			for (var path : paths.keySet()) {
+				assertTrue(path.startsWith("/api/v1/"), "Expected path under /api/v1/ but found: " + path);
+			}
 		}
 	}
 
