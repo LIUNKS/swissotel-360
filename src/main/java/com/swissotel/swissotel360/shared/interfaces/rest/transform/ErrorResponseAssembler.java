@@ -61,6 +61,7 @@ public final class ErrorResponseAssembler {
 	private static String toMessageKeyFromErrorCode(String errorCode) {
 		return switch (errorCode) {
 			case "VALIDATION_ERROR" -> "error.validation.message";
+			case "UNAUTHORIZED" -> "error.unauthorized.message";
 			case "BUSINESS_RULE_VIOLATION" -> "error.business-rule.message";
 			case "UNEXPECTED_ERROR" -> "error.unexpected.message";
 			case String s when s.endsWith("_NOT_FOUND") -> "error.not-found.message";
@@ -118,6 +119,7 @@ public final class ErrorResponseAssembler {
 	public static HttpStatusCode toStatusFromErrorCode(String errorCode) {
 		return switch (errorCode) {
 			case "VALIDATION_ERROR" -> HttpStatus.BAD_REQUEST;
+			case "UNAUTHORIZED" -> HttpStatus.UNAUTHORIZED;
 			case String s when s.endsWith("_NOT_FOUND") -> HttpStatus.NOT_FOUND;
 			case "BUSINESS_RULE_VIOLATION" -> HttpStatusCode.valueOf(422);
 			case String s when s.endsWith("_CONFLICT") -> HttpStatus.CONFLICT;

@@ -77,4 +77,14 @@ public record ApplicationError(
 				"Unexpected error in %s".formatted(context),
 				reason);
 	}
+
+	/**
+	 * Unauthorized error: authentication failed or missing valid credentials
+	 */
+	public static ApplicationError unauthorized(String reason) {
+		return new ApplicationError(
+				"UNAUTHORIZED",
+				"Authentication failed",
+				reason);
+	}
 }

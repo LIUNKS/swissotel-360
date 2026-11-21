@@ -4,6 +4,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -25,6 +26,8 @@ import java.io.IOException;
 @Slf4j
 public class UnauthorizedRequestHandlerEntryPoint implements AuthenticationEntryPoint {
 
+	private static final String UNAUTHORIZED_BODY = "{\"code\":\"UNAUTHORIZED\",\"message\":\"Authentication required\"}";
+
 	/**
 	 * This method is called by the Spring Security framework when an unauthorized
 	 * request is detected.
@@ -41,6 +44,10 @@ public class UnauthorizedRequestHandlerEntryPoint implements AuthenticationEntry
 	public void commence(HttpServletRequest request, HttpServletResponse response,
 			AuthenticationException authenticationException) throws IOException, ServletException {
 		log.error("Unauthorized request: {}", authenticationException.getMessage());
-		response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized request detected");
+		response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+		response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+		var writer = response.getWriter();
+		writer.write(UNAUTHORIZED_BODY);
+		writer.flush();
 	}
 }

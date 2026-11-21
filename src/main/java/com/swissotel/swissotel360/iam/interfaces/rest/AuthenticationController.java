@@ -59,8 +59,8 @@ public class AuthenticationController {
 	@Operation(summary = "Sign in user", description = "Authenticates a user and returns a session cookie and user details")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "Successfully authenticated", content = @Content(schema = @Schema(implementation = AuthenticatedUserResource.class))),
-			@ApiResponse(responseCode = "400", description = "Invalid credentials or input", content = @Content(schema = @Schema(implementation = ErrorResource.class))),
-			@ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ErrorResource.class)))
+			@ApiResponse(responseCode = "400", description = "Invalid input or validation failure", content = @Content(schema = @Schema(implementation = ErrorResource.class))),
+			@ApiResponse(responseCode = "401", description = "Invalid credentials", content = @Content(schema = @Schema(implementation = ErrorResource.class)))
 	})
 	@PostMapping("/sign-in")
 	public ResponseEntity<?> signIn(@Valid @RequestBody SignInResource resource) {
