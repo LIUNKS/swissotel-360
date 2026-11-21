@@ -8,12 +8,17 @@ import com.swissotel.swissotel360.reservations.domain.repositories.ReservationRe
 import com.swissotel.swissotel360.reservations.infrastructure.persistence.jpa.assemblers.ReservationPersistenceAssembler;
 import com.swissotel.swissotel360.reservations.infrastructure.persistence.jpa.entities.ReservationPersistenceEntity;
 import com.swissotel.swissotel360.reservations.infrastructure.persistence.jpa.repositories.ReservationPersistenceRepository;
+import jakarta.persistence.criteria.Predicate;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Repository;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Repository
@@ -56,8 +61,11 @@ public class ReservationRepositoryImpl implements ReservationRepository {
 
 	@Override
 	public long countActiveOverlapping(RoomTypeId type, StayPeriod period, Optional<ReservationId> excluding) {
-		return repository.countActiveOverlapping(type.value(), period.checkIn(), period.checkOut(),
-				excluding.map(ReservationId::value).orElse(null));
+		if (excluding != null && excluding.isPresent()) {
+			return repository.countActiveOverlappingExcluding(type.value(), period.checkIn(), period.checkOut(),
+					excluding.get().value());
+		}
+		return repository.countActiveOverlapping(type.value(), period.checkIn(), period.checkOut());
 	}
 
 	@Override
@@ -73,12 +81,33 @@ public class ReservationRepositoryImpl implements ReservationRepository {
 
 	@Override
 	public ReservationPage search(ReservationSearch search) {
-		var page = repository.search(search.status() == null ? null : search.status().code(),
-				search.guestId() == null ? null : search.guestId().value(), search.code(), search.checkInFrom(),
-				search.checkInTo(),
+		var page = repository.findAll(buildSearchSpecification(search),
 				PageRequest.of(search.page(), search.size(), Sort.by(Sort.Direction.DESC, "createdAt")));
 		return new ReservationPage(page.getContent().stream().map(ReservationPersistenceAssembler::toDomain).toList(),
 				page.getTotalElements());
+	}
+
+	private Specification<ReservationPersistenceEntity> buildSearchSpecification(ReservationSearch search) {
+		return (root, query, cb) -> {
+			List<Predicate> predicates = new ArrayList<>();
+			if (search.status() != null) {
+				predicates.add(cb.equal(root.get("status"), search.status().code()));
+			}
+			if (search.guestId() != null) {
+				predicates.add(cb.equal(root.get("guestId"), search.guestId().value()));
+			}
+			if (search.code() != null && !search.code().isBlank()) {
+				predicates.add(cb.like(cb.lower(root.<String>get("reservationCode")),
+						"%" + search.code().trim().toLowerCase(Locale.ROOT) + "%"));
+			}
+			if (search.checkInFrom() != null) {
+				predicates.add(cb.greaterThanOrEqualTo(root.<LocalDate>get("checkInDate"), search.checkInFrom()));
+			}
+			if (search.checkInTo() != null) {
+				predicates.add(cb.lessThanOrEqualTo(root.<LocalDate>get("checkInDate"), search.checkInTo()));
+			}
+			return cb.and(predicates.toArray(Predicate[]::new));
+		};
 	}
 
 	private boolean hasConstraint(Throwable ex, String name) {
