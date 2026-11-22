@@ -1,0 +1,3 @@
+com.swissotel.swissotel360.shared.infrastructure.autoconfigure.SharedKernelAutoConfiguration
+com.swissotel.swissotel360.shared.infrastructure.documentation.openapi.configuration.OpenApiConfiguration
+com.swissotel.swissotel360.shared.infrastructure.i18n.configuration.LocaleConfiguration
