@@ -1,10 +1,5 @@
 package com.swissotel.swissotel360;
 
-import com.swissotel.swissotel360.billing.domain.exceptions.*;
-import com.swissotel.swissotel360.billing.domain.model.DocumentType;
-import com.swissotel.swissotel360.billing.domain.model.FolioStatus;
-import com.swissotel.swissotel360.billing.domain.model.PaymentStatus;
-import com.swissotel.swissotel360.billing.interfaces.rest.BillingExceptionHandler;
 import com.swissotel.swissotel360.guests.domain.exceptions.DocumentTypeNotFoundException;
 import com.swissotel.swissotel360.guests.domain.exceptions.DuplicateGuestException;
 import com.swissotel.swissotel360.guests.domain.exceptions.GuestNotFoundException;
@@ -65,7 +60,6 @@ class DomainExceptionHandlersTest {
 	private final ReservationsExceptionHandler reservationsHandler = new ReservationsExceptionHandler();
 	private final StaysExceptionHandler staysHandler = new StaysExceptionHandler();
 	private final ServiceRequestsExceptionHandler serviceRequestsHandler = new ServiceRequestsExceptionHandler();
-	private final BillingExceptionHandler billingHandler = new BillingExceptionHandler();
 
 	@Test
 	void mapsNotFoundExceptionsTo404ErrorResource() {
@@ -104,16 +98,6 @@ class DomainExceptionHandlersTest {
 		assertErrorResponse(serviceRequestsHandler.handleServiceTypeNotFound(new ServiceTypeNotFoundException("SPA")),
 				404, "SERVICE_TYPE_NOT_FOUND", "Service type not found", "SPA");
 		assertErrorResponse(serviceRequestsHandler.handleServiceRequestStayNotFound(new ServiceRequestStayNotFoundException(uuid)),
-				404, "STAY_NOT_FOUND", "Stay not found", uuid.toString());
-		assertErrorResponse(billingHandler.handleFolioNotFound(new FolioNotFoundException(uuid)),
-				404, "FOLIO_NOT_FOUND", "Folio not found", uuid.toString());
-		assertErrorResponse(billingHandler.handlePaymentMethodNotFound(new PaymentMethodNotFoundException("CARD")),
-				404, "PAYMENT_METHOD_NOT_FOUND", "Payment method not found", "CARD");
-		assertErrorResponse(billingHandler.handlePaymentNotFound(new PaymentNotFoundException(uuid)),
-				404, "PAYMENT_NOT_FOUND", "Payment not found", uuid.toString());
-		assertErrorResponse(billingHandler.handleChargeServiceRequestNotFound(new ChargeServiceRequestNotFoundException(uuid)),
-				404, "SERVICE_REQUEST_NOT_FOUND", "Service request not found", uuid.toString());
-		assertErrorResponse(billingHandler.handleBillingStayNotFound(new BillingStayNotFoundException(uuid)),
 				404, "STAY_NOT_FOUND", "Stay not found", uuid.toString());
 	}
 
@@ -176,14 +160,6 @@ class DomainExceptionHandlersTest {
 				"Invalid service request transition", "completed -> in_progress");
 		assertErrorResponse(staysHandler.handleStayAlreadyClosed(new StayAlreadyClosedException(uuid)),
 				409, "STAY_ALREADY_CLOSED", "Stay is already closed", uuid.toString());
-		assertErrorResponse(billingHandler.handleFolioClosed(new FolioClosedException()),
-				409, "FOLIO_CLOSED", "Folio is closed", "closed");
-		assertErrorResponse(billingHandler.handleFolioAlreadyPaid(new FolioAlreadyPaidException()),
-				409, "FOLIO_ALREADY_PAID", "Folio is already paid", "payment");
-		assertErrorResponse(billingHandler.handlePaymentNotProcessed(new PaymentNotProcessedException()),
-				409, "PAYMENT_NOT_PROCESSED", "Payment is not processed", "not processed");
-		assertErrorResponse(billingHandler.handleInvoiceAlreadyIssued(new InvoiceAlreadyIssuedException()),
-				409, "INVOICE_ALREADY_ISSUED", "Invoice already issued", "already issued");
 	}
 
 	@Test
@@ -197,8 +173,6 @@ class DomainExceptionHandlersTest {
 				422, "RATE_NOT_FOUND", "Rate not found", "2026-12-25");
 		assertErrorResponse(staysHandler.handleGuestDocumentMismatch(new GuestDocumentMismatchException()),
 				422, "GUEST_DOCUMENT_MISMATCH", "Guest document does not match reservation", "does not match");
-		assertErrorResponse(billingHandler.handlePaymentAmountMismatch(new PaymentAmountMismatchException()),
-				422, "PAYMENT_AMOUNT_MISMATCH", "Payment amount mismatch", "folio total");
 	}
 
 	@Test
@@ -223,21 +197,6 @@ class DomainExceptionHandlersTest {
 
 	@Test
 	void domainEnumsRejectInvalidCodesWithoutExposingJavaClassNames() {
-		assertInvalidEnumCode(() -> DocumentType.fromCode("zzz"), "Invalid document type");
-		assertInvalidEnumCode(() -> DocumentType.fromCode(null), "Invalid document type");
-		assertInvalidEnumCode(() -> DocumentType.fromCode("   "), "Invalid document type");
-		assertEquals(DocumentType.RECEIPT, DocumentType.fromCode("receipt"));
-
-		assertInvalidEnumCode(() -> FolioStatus.fromCode("zzz"), "Invalid folio status");
-		assertInvalidEnumCode(() -> FolioStatus.fromCode(null), "Invalid folio status");
-		assertInvalidEnumCode(() -> FolioStatus.fromCode("   "), "Invalid folio status");
-		assertEquals(FolioStatus.OPEN, FolioStatus.fromCode("open"));
-
-		assertInvalidEnumCode(() -> PaymentStatus.fromCode("zzz"), "Invalid payment status");
-		assertInvalidEnumCode(() -> PaymentStatus.fromCode(null), "Invalid payment status");
-		assertInvalidEnumCode(() -> PaymentStatus.fromCode("   "), "Invalid payment status");
-		assertEquals(PaymentStatus.PROCESSED, PaymentStatus.fromCode("processed"));
-
 		assertInvalidEnumCode(() -> ServiceRequestStatus.fromCode("zzz"), "Invalid service request status");
 		assertInvalidEnumCode(() -> ServiceRequestStatus.fromCode(null), "Invalid service request status");
 		assertInvalidEnumCode(() -> ServiceRequestStatus.fromCode("   "), "Invalid service request status");

@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplicat
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
@@ -18,8 +19,9 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
  * Auto-configuration providing stateless JWT authentication and method security for microservices.
  * Services like IAM or the monolith can supply their own SecurityFilterChain bean to override defaults.
  */
-@AutoConfiguration
+@AutoConfiguration(beforeName = "org.springframework.boot.security.autoconfigure.web.servlet.ServletWebSecurityAutoConfiguration")
 @ConditionalOnWebApplication(type = ConditionalOnWebApplication.Type.SERVLET)
+@EnableWebSecurity
 @EnableMethodSecurity
 public class StatelessSecurityAutoConfiguration {
 
