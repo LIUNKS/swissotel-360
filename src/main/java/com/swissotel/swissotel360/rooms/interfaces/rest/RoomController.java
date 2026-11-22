@@ -2,7 +2,6 @@ package com.swissotel.swissotel360.rooms.interfaces.rest;
 
 import com.swissotel.swissotel360.rooms.application.commandservices.RoomCommandService;
 import com.swissotel.swissotel360.rooms.application.queryservices.RoomQueryService;
-import com.swissotel.swissotel360.rooms.domain.model.queries.RoomFilter;
 import com.swissotel.swissotel360.rooms.domain.model.queries.GetRoomByPublicIdQuery;
 import com.swissotel.swissotel360.rooms.domain.model.valueobjects.RoomStatus;
 import com.swissotel.swissotel360.rooms.interfaces.rest.resources.CreateRoomResource;
@@ -49,15 +48,16 @@ public class RoomController {
 	@PreAuthorize("hasAuthority('rooms.view')")
 	@Operation(summary = "Search rooms", security = @SecurityRequirement(name = "bearerAuth"))
 	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Paged rooms"),
-			@ApiResponse(responseCode = "400", description = "Invalid pagination") })
-	public ResponseEntity<?> list(@RequestParam(required = false) Long roomTypeId,
+			@ApiResponse(responseCode = "400", description = "Invalid pagination"),
+			@ApiResponse(responseCode = "404", description = "Room type not found") })
+	public ResponseEntity<?> list(@RequestParam(required = false) UUID roomTypePublicId,
 			@RequestParam(required = false) RoomStatus status,
 			@RequestParam(defaultValue = "0") int page,
 			@RequestParam(defaultValue = "20") int size) {
 		if (page < 0 || size < 1 || size > 100) {
 			throw new IllegalArgumentException("page must be non-negative and size must be between 1 and 100");
 		}
-		var result = queries.find(new RoomFilter(roomTypeId, status, page, size));
+		var result = queries.find(roomTypePublicId, status, page, size);
 		var content = result.content().stream().map(RoomsResourceAssembler::toResource).toList();
 		return ResponseEntity.ok(new PageImpl<>(content, PageRequest.of(page, size), result.totalElements()));
 	}

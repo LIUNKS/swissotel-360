@@ -12,8 +12,6 @@ public interface RoomTypeRepository {
 
 	Optional<RoomType> findById(Long id);
 
-	void lockInventory(Long id);
-
 	List<RoomType> findAll();
 
 	boolean existsByNameIgnoreCase(String name);

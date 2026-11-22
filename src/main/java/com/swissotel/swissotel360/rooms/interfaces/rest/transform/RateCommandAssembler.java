@@ -16,11 +16,11 @@ public final class RateCommandAssembler {
 				resource.validTo());
 	}
 
-	public static CloseRateCommand toCommand(UUID roomTypePublicId, Long rateId, CloseRateResource resource) {
-		return new CloseRateCommand(roomTypePublicId, rateId, resource.validTo());
+	public static CloseRateCommand toCommand(UUID roomTypePublicId, UUID ratePublicId, CloseRateResource resource) {
+		return new CloseRateCommand(roomTypePublicId, ratePublicId, resource.validTo());
 	}
 
-	public static DeleteRateCommand toDeleteCommand(UUID roomTypePublicId, Long rateId) {
-		return new DeleteRateCommand(roomTypePublicId, rateId);
+	public static DeleteRateCommand toDeleteCommand(UUID roomTypePublicId, UUID ratePublicId) {
+		return new DeleteRateCommand(roomTypePublicId, ratePublicId);
 	}
 }

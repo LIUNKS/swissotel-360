@@ -41,10 +41,6 @@ public class AvailabilityContextFacadeImpl implements AvailabilityContextFacade 
 		return types.findById(id).map(t -> new RoomTypeInventorySnapshot(t.id(), t.publicId(), t.name(), t.capacity()));
 	}
 
-	public void lockInventory(Long id) {
-		types.lockInventory(id);
-	}
-
 	public int sellableUnits(Long id) {
 		return Math.toIntExact(rooms.countByRoomTypeIdAndStatusNot(id,
 				com.swissotel.swissotel360.rooms.domain.model.valueobjects.RoomStatus.OUT_OF_SERVICE));

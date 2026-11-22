@@ -60,11 +60,11 @@ public class GuestController {
 			@ApiResponse(responseCode = "200", description = "Guest found", content = @Content(schema = @Schema(implementation = GuestResource.class))),
 			@ApiResponse(responseCode = "404", description = "Guest not found"),
 			@ApiResponse(responseCode = "403", description = "Permission denied") })
-	public ResponseEntity<GuestResource> lookup(@RequestParam Long documentTypeId,
+	public ResponseEntity<GuestResource> lookup(@RequestParam String documentTypeCode,
 			@RequestParam String documentNumber) {
-		var query = new FindGuestByDocumentQuery(documentTypeId, documentNumber);
+		var query = new FindGuestByDocumentQuery(documentTypeCode, documentNumber);
 		return ResponseEntity
-				.ok(GuestResource.from(queryService.findByDocument(query.documentTypeId(), query.documentNumber())));
+				.ok(GuestResource.from(queryService.findByDocument(query.documentTypeCode(), query.documentNumber())));
 	}
 
 	@GetMapping("/{publicId}")

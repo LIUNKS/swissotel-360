@@ -32,14 +32,15 @@ class RateCommandServiceImplTest {
 		when(rates.findOverlapping(roomType.id(), from, to)).thenReturn(List.of());
 		when(rates.save(any())).thenAnswer(invocation -> {
 			Rate rate = invocation.getArgument(0);
-			return new Rate(100L, rate.roomTypeId(), rate.roomTypePublicId(), rate.price(), rate.season(),
-					rate.validFrom(), rate.validTo());
+			return new Rate(100L, rate.publicId(), rate.roomTypeId(), rate.roomTypePublicId(), rate.price(),
+					rate.season(), rate.validFrom(), rate.validTo());
 		});
 
 		var created = service.create(
 				new CreateRateCommand(roomTypePublicId, new BigDecimal("420.00"), "high-season", from, to));
 
 		assertEquals(100L, created.id());
+		assertNotNull(created.publicId());
 		assertEquals(roomType.id(), created.roomTypeId());
 		assertEquals(roomTypePublicId, created.roomTypePublicId());
 		assertEquals(new BigDecimal("420.00"), created.price());
@@ -57,14 +58,15 @@ class RateCommandServiceImplTest {
 		when(rates.findOverlapping(roomType.id(), from, null)).thenReturn(List.of());
 		when(rates.save(any())).thenAnswer(invocation -> {
 			Rate rate = invocation.getArgument(0);
-			return new Rate(101L, rate.roomTypeId(), rate.roomTypePublicId(), rate.price(), rate.season(),
-					rate.validFrom(), rate.validTo());
+			return new Rate(101L, rate.publicId(), rate.roomTypeId(), rate.roomTypePublicId(), rate.price(),
+					rate.season(), rate.validFrom(), rate.validTo());
 		});
 
 		var created = service
 				.create(new CreateRateCommand(roomTypePublicId, new BigDecimal("300.00"), null, from, null));
 
 		assertEquals(101L, created.id());
+		assertNotNull(created.publicId());
 		assertEquals(roomType.id(), created.roomTypeId());
 		assertEquals(roomTypePublicId, created.roomTypePublicId());
 		assertEquals(new BigDecimal("300.00"), created.price());
@@ -79,8 +81,8 @@ class RateCommandServiceImplTest {
 	void rejectsOverlappingRate() {
 		var from = LocalDate.of(2026, 6, 1);
 		var to = LocalDate.of(2026, 6, 30);
-		var existing = new Rate(1L, roomType.id(), roomTypePublicId, new BigDecimal("300.00"), "base",
-				LocalDate.of(2026, 6, 15), null);
+		var existing = new Rate(1L, UUID.randomUUID(), roomType.id(), roomTypePublicId, new BigDecimal("300.00"),
+				"base", LocalDate.of(2026, 6, 15), null);
 		when(roomTypes.findByPublicId(roomTypePublicId)).thenReturn(Optional.of(roomType));
 		when(rates.findOverlapping(roomType.id(), from, to)).thenReturn(List.of(existing));
 

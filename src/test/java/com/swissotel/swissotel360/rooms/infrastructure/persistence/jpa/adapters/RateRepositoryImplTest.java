@@ -21,16 +21,18 @@ class RateRepositoryImplTest {
 	@Test
 	void findOverlappingDispatchesToOpenEndedWhenToIsNull() {
 		var roomTypePublicId = UUID.randomUUID();
+		var ratePublicId = UUID.randomUUID();
 		var roomTypeEntity = new RoomTypePersistenceEntity(1L, roomTypePublicId, "Deluxe", (short) 2, "Deluxe room");
 		var from = LocalDate.of(2026, 6, 1);
-		var entity = new RatePersistenceEntity(10L, roomTypeEntity, new BigDecimal("420.00"), "high-season", from,
-				null);
+		var entity = new RatePersistenceEntity(10L, ratePublicId, roomTypeEntity, new BigDecimal("420.00"),
+				"high-season", from, null);
 		when(jpaRepository.findOverlappingOpenEnded(1L, from)).thenReturn(List.of(entity));
 
 		var result = repository.findOverlapping(1L, from, null);
 
 		assertEquals(1, result.size());
 		assertEquals(10L, result.get(0).id());
+		assertEquals(ratePublicId, result.get(0).publicId());
 		assertEquals(1L, result.get(0).roomTypeId());
 		assertEquals(roomTypePublicId, result.get(0).roomTypePublicId());
 		assertEquals(new BigDecimal("420.00"), result.get(0).price());
@@ -45,16 +47,19 @@ class RateRepositoryImplTest {
 	@Test
 	void findOverlappingDispatchesToClosedWhenToIsPresent() {
 		var roomTypePublicId = UUID.randomUUID();
+		var ratePublicId = UUID.randomUUID();
 		var roomTypeEntity = new RoomTypePersistenceEntity(1L, roomTypePublicId, "Deluxe", (short) 2, "Deluxe room");
 		var from = LocalDate.of(2026, 6, 1);
 		var to = LocalDate.of(2026, 8, 31);
-		var entity = new RatePersistenceEntity(11L, roomTypeEntity, new BigDecimal("350.00"), "regular", from, to);
+		var entity = new RatePersistenceEntity(11L, ratePublicId, roomTypeEntity, new BigDecimal("350.00"), "regular",
+				from, to);
 		when(jpaRepository.findOverlappingClosed(1L, from, to)).thenReturn(List.of(entity));
 
 		var result = repository.findOverlapping(1L, from, to);
 
 		assertEquals(1, result.size());
 		assertEquals(11L, result.get(0).id());
+		assertEquals(ratePublicId, result.get(0).publicId());
 		assertEquals(1L, result.get(0).roomTypeId());
 		assertEquals(roomTypePublicId, result.get(0).roomTypePublicId());
 		assertEquals(new BigDecimal("350.00"), result.get(0).price());

@@ -4,11 +4,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
-public record Rate(Long id, Long roomTypeId, UUID roomTypePublicId, BigDecimal price, String season,
+public record Rate(Long id, UUID publicId, Long roomTypeId, UUID roomTypePublicId, BigDecimal price, String season,
 		LocalDate validFrom, LocalDate validTo) {
 	public Rate {
-		if (roomTypeId == null || roomTypePublicId == null || price == null || validFrom == null)
-			throw new IllegalArgumentException("Room type, price and validFrom are required");
+		if (publicId == null || roomTypeId == null || roomTypePublicId == null || price == null || validFrom == null)
+			throw new IllegalArgumentException("Public id, room type, price and validFrom are required");
 		if (price.signum() < 0 || price.compareTo(new BigDecimal("99999999.99")) > 0
 				|| price.stripTrailingZeros().scale() > 2)
 			throw new IllegalArgumentException("price must fit NUMERIC(10,2) and be non-negative");
@@ -23,11 +23,11 @@ public record Rate(Long id, Long roomTypeId, UUID roomTypePublicId, BigDecimal p
 			throw new IllegalArgumentException("Rate is already closed");
 		if (date == null || date.isBefore(validFrom))
 			throw new IllegalArgumentException("validTo must be on or after validFrom");
-		return new Rate(id, roomTypeId, roomTypePublicId, price, season, validFrom, date);
+		return new Rate(id, publicId, roomTypeId, roomTypePublicId, price, season, validFrom, date);
 	}
 
 	public void validateDeletable(LocalDate today) {
 		if (!validFrom.isAfter(today))
-			throw new com.swissotel.swissotel360.rooms.domain.exceptions.RateCannotBeDeletedException(id);
+			throw new com.swissotel.swissotel360.rooms.domain.exceptions.RateCannotBeDeletedException(publicId);
 	}
 }

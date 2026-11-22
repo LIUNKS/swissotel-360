@@ -2,13 +2,12 @@ package com.swissotel.swissotel360.stays.application.internal.outboundservices.a
 
 import com.swissotel.swissotel360.guests.interfaces.acl.GuestDirectoryContextFacade;
 import com.swissotel.swissotel360.guests.interfaces.acl.GuestDirectorySnapshot;
-import com.swissotel.swissotel360.iam.interfaces.acl.IamContextFacade;
 import com.swissotel.swissotel360.reservations.interfaces.acl.ReservationContextSnapshot;
 import com.swissotel.swissotel360.reservations.interfaces.acl.ReservationsContextFacade;
 import com.swissotel.swissotel360.rooms.interfaces.acl.RoomInfoSnapshot;
 import com.swissotel.swissotel360.rooms.interfaces.acl.RoomsContextFacade;
+import com.swissotel.swissotel360.shared.infrastructure.security.AuthenticatedUserPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import java.util.Optional;
 import java.util.UUID;
@@ -19,22 +18,20 @@ public class StayCollaboratorsOutboundService {
 	private final ReservationsContextFacade reservations;
 	private final GuestDirectoryContextFacade guests;
 	private final RoomsContextFacade rooms;
-	private final IamContextFacade iam;
 
 	public StayCollaboratorsOutboundService(ReservationsContextFacade reservations,
-			GuestDirectoryContextFacade guests, RoomsContextFacade rooms, IamContextFacade iam) {
+			GuestDirectoryContextFacade guests, RoomsContextFacade rooms) {
 		this.reservations = reservations;
 		this.guests = guests;
 		this.rooms = rooms;
-		this.iam = iam;
 	}
 
 	public Optional<ReservationContextSnapshot> findReservation(String code) {
 		return reservations.findByCode(code);
 	}
 
-	public void completeReservation(UUID reservationPublicId) {
-		reservations.markCompleted(reservationPublicId);
+	public void completeReservation(Long reservationId) {
+		reservations.markCompleted(reservationId);
 	}
 
 	public Optional<GuestDirectorySnapshot> findGuest(Long guestId) {
@@ -53,20 +50,19 @@ public class StayCollaboratorsOutboundService {
 		return rooms.findFirstAvailable(roomTypeId);
 	}
 
-	public void markRoomOccupied(UUID roomPublicId) {
-		rooms.markOccupied(roomPublicId);
+	public void markRoomOccupied(Long roomId) {
+		rooms.markOccupied(roomId);
 	}
 
-	public void markRoomCheckedOut(UUID roomPublicId) {
-		rooms.markCheckedOut(roomPublicId);
+	public void markRoomCheckedOut(Long roomId) {
+		rooms.markCheckedOut(roomId);
 	}
 
-	/** Internal IAM id of the authenticated user, or null when it cannot be resolved. */
+	/** Internal IAM id of the authenticated user. */
 	public Long currentUserId() {
 		var authentication = SecurityContextHolder.getContext().getAuthentication();
-		if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails principal))
+		if (authentication == null || !(authentication.getPrincipal() instanceof AuthenticatedUserPrincipal principal))
 			throw new IllegalStateException("An authenticated user is required");
-		var id = iam.fetchUserIdByEmail(principal.getUsername());
-		return id == null || id < 1 ? null : id;
+		return principal.userId();
 	}
 }

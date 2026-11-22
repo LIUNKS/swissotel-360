@@ -25,11 +25,11 @@ public final class RoomsPersistenceAssembler {
 	}
 
 	public static Rate toDomain(RatePersistenceEntity e) {
-		return new Rate(e.getId(), e.getRoomType().getId(), e.getRoomType().getPublicId(), e.getPrice(), e.getSeason(),
-				e.getValidFrom(), e.getValidTo());
+		return new Rate(e.getId(), e.getPublicId(), e.getRoomType().getId(), e.getRoomType().getPublicId(), e.getPrice(),
+				e.getSeason(), e.getValidFrom(), e.getValidTo());
 	}
 
 	public static RatePersistenceEntity toEntity(Rate d, RoomTypePersistenceEntity type) {
-		return new RatePersistenceEntity(d.id(), type, d.price(), d.season(), d.validFrom(), d.validTo());
+		return new RatePersistenceEntity(d.id(), d.publicId(), type, d.price(), d.season(), d.validFrom(), d.validTo());
 	}
 }

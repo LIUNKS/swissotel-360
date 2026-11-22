@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/digital-keys")
@@ -42,7 +43,7 @@ public class DigitalKeyController {
 	@Operation(summary = "Revoke a digital key", security = @SecurityRequirement(name = "bearerAuth"))
 	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Key revoked"),
 			@ApiResponse(responseCode = "404", description = "Key not found") })
-	public ResponseEntity<DigitalKeyResource> revoke(@PathVariable Long keyId) {
+	public ResponseEntity<DigitalKeyResource> revoke(@PathVariable UUID keyId) {
 		return ResponseEntity.ok(StayRestMapper.toRevoked(commands.revokeKey(new RevokeDigitalKeyCommand(keyId))));
 	}
 }

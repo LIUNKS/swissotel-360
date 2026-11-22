@@ -8,7 +8,7 @@ public class AuthenticatedUserResourceFromEntityAssembler {
 	}
 
 	public static AuthenticatedUserResource toResourceFromEntity(User entity) {
-		return new AuthenticatedUserResource(entity.getId(), entity.getPublicId(), entity.getFullName(),
+		return new AuthenticatedUserResource(entity.getPublicId(), entity.getFullName(),
 				entity.getEmail(), entity.getRole().getStringName());
 	}
 }

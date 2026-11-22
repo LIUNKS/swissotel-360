@@ -1,6 +1,7 @@
 package com.swissotel.swissotel360.iam.infrastructure.tokens.jwt.services;
 
 import com.swissotel.swissotel360.iam.infrastructure.tokens.jwt.BearerTokenService;
+import com.swissotel.swissotel360.shared.infrastructure.security.AuthenticatedUserPrincipal;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -13,8 +14,14 @@ import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
+import java.util.Collection;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 public class TokenServiceImpl implements BearerTokenService {
@@ -33,8 +40,45 @@ public class TokenServiceImpl implements BearerTokenService {
 	}
 
 	@Override
-	public String generateToken(String username) {
-		return buildTokenWithDefaultParameters(username);
+	public String generateToken(Long userId, UUID publicId, String email, String role, Collection<String> permissions) {
+		Date issuedAt = new Date();
+		Date expiration = new Date(issuedAt.getTime() + expirationDays * 24L * 3600L * 1000L);
+		return Jwts.builder()
+				.subject(email)
+				.claim("uid", userId)
+				.claim("pid", publicId.toString())
+				.claim("role", role)
+				.claim("perms", List.copyOf(permissions))
+				.issuedAt(issuedAt)
+				.expiration(expiration)
+				.signWith(getSigningKey())
+				.compact();
+	}
+
+	@Override
+	public Optional<AuthenticatedUserPrincipal> parsePrincipal(String token) {
+		try {
+			Claims claims = extractAllClaims(token);
+			String email = claims.getSubject();
+			Number uid = claims.get("uid", Number.class);
+			String pidRaw = claims.get("pid", String.class);
+			String role = claims.get("role", String.class);
+			List<?> rawPerms = claims.get("perms", List.class);
+			if (!StringUtils.hasText(email) || uid == null || !StringUtils.hasText(pidRaw) || !StringUtils.hasText(role)
+					|| rawPerms == null) {
+				logger.debug("JWT token missing required claims");
+				return Optional.empty();
+			}
+			UUID publicId = UUID.fromString(pidRaw);
+			Set<String> perms = rawPerms.stream()
+					.filter(String.class::isInstance)
+					.map(String.class::cast)
+					.collect(Collectors.toUnmodifiableSet());
+			return Optional.of(new AuthenticatedUserPrincipal(uid.longValue(), publicId, email, role, perms));
+		} catch (Exception e) {
+			logger.error("Invalid JWT token: {}", e.getMessage());
+			return Optional.empty();
+		}
 	}
 
 	@Override
@@ -70,17 +114,6 @@ public class TokenServiceImpl implements BearerTokenService {
 		}
 
 		return null;
-	}
-
-	private String buildTokenWithDefaultParameters(String username) {
-		Date issuedAt = new Date();
-		Date expiration = new Date(issuedAt.getTime() + expirationDays * 24L * 3600L * 1000L);
-		return Jwts.builder()
-				.subject(username)
-				.issuedAt(issuedAt)
-				.expiration(expiration)
-				.signWith(getSigningKey())
-				.compact();
 	}
 
 	private SecretKey getSigningKey() {

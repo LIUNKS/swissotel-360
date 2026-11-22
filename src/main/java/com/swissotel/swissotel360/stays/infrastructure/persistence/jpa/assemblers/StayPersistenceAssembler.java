@@ -20,7 +20,7 @@ public final class StayPersistenceAssembler {
 	}
 
 	public static DigitalKey toDomain(DigitalKeyPersistenceEntity e) {
-		return DigitalKey.restore(e.getId(), e.getAccessCode(), e.getActivatedAt(), e.getRevokedAt(),
+		return DigitalKey.restore(e.getId(), e.getPublicId(), e.getAccessCode(), e.getActivatedAt(), e.getRevokedAt(),
 				KeyStatus.fromCode(e.getStatus()));
 	}
 
@@ -37,6 +37,7 @@ public final class StayPersistenceAssembler {
 	}
 
 	public static DigitalKeyPersistenceEntity toEntity(DigitalKey k, Long stayId, DigitalKeyPersistenceEntity e) {
+		e.setPublicId(k.publicId());
 		e.setStayId(stayId);
 		e.setAccessCode(k.accessCode());
 		e.setActivatedAt(k.activatedAt());

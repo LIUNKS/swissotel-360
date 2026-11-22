@@ -25,8 +25,8 @@ public class StaysContextFacadeImpl implements StaysContextFacade {
 	}
 
 	@Override
-	public boolean isActive(UUID id) {
-		return stays.findByPublicId(id).map(Stay::isActive).orElse(false);
+	public boolean isActive(Long stayId) {
+		return stays.findById(stayId).map(Stay::isActive).orElse(false);
 	}
 
 	private static StayContextSnapshot snapshot(Stay s) {

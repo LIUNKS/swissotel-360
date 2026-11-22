@@ -70,7 +70,7 @@ class ReservationCommandServiceTest {
 		assertEquals(guest.id(), result.reservation().guestId());
 		assertNull(result.holdExpiresAt());
 		assertNull(result.prepayment());
-		verify(rooms).lockInventory(roomType.id());
+		verify(reservations).lockRoomType(roomType.id());
 		verify(events).publishAfterCommit(anyCollection());
 	}
 

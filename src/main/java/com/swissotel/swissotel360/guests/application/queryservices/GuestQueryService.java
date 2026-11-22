@@ -15,7 +15,7 @@ public interface GuestQueryService {
 
 	java.util.Optional<Guest> findByUserId(Long userId);
 
-	Guest findByDocument(Long documentTypeId, String documentNumber);
+	Guest findByDocument(String documentTypeCode, String documentNumber);
 
 	GuestPage search(String query, int page, int size);
 

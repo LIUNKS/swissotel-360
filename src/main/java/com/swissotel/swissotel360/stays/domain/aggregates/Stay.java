@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public final class Stay extends AbstractDomainAggregateRoot<Stay> {
 	private final StayId id;
@@ -74,9 +75,9 @@ public final class Stay extends AbstractDomainAggregateRoot<Stay> {
 		return key;
 	}
 
-	public void revokeKey(Long keyId, Instant now) {
-		keys.stream().filter(k -> keyId.equals(k.id())).findFirst()
-				.orElseThrow(() -> new DigitalKeyNotFoundException(keyId)).revoke(now);
+	public void revokeKey(UUID keyPublicId, Instant now) {
+		keys.stream().filter(k -> keyPublicId.equals(k.publicId())).findFirst()
+				.orElseThrow(() -> new DigitalKeyNotFoundException(keyPublicId)).revoke(now);
 	}
 
 	public boolean isActive() {

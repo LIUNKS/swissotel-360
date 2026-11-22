@@ -6,6 +6,6 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 @Schema(description = "Room type nightly rate and validity period")
-public record RateResource(Long id, UUID roomTypePublicId, BigDecimal price, String season, LocalDate validFrom,
+public record RateResource(UUID publicId, UUID roomTypePublicId, BigDecimal price, String season, LocalDate validFrom,
 		LocalDate validTo) {
 }

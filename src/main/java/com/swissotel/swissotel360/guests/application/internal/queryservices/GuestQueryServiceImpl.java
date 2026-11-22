@@ -1,6 +1,7 @@
 package com.swissotel.swissotel360.guests.application.internal.queryservices;
 
 import com.swissotel.swissotel360.guests.application.queryservices.GuestQueryService;
+import com.swissotel.swissotel360.guests.domain.exceptions.DocumentTypeNotFoundException;
 import com.swissotel.swissotel360.guests.domain.exceptions.GuestNotFoundException;
 import com.swissotel.swissotel360.guests.domain.model.aggregates.Guest;
 import com.swissotel.swissotel360.guests.domain.model.queries.GuestPage;
@@ -43,8 +44,11 @@ public class GuestQueryServiceImpl implements GuestQueryService {
 	}
 
 	@Override
-	public Guest findByDocument(Long documentTypeId, String documentNumber) {
-		return guestRepository.findByDocument(documentTypeId, documentNumber.trim())
+	public Guest findByDocument(String documentTypeCode, String documentNumber) {
+		var code = documentTypeCode == null ? "" : documentTypeCode.trim();
+		var documentType = documentTypeRepository.findByCode(code)
+				.orElseThrow(() -> new DocumentTypeNotFoundException(code));
+		return guestRepository.findByDocument(documentType.id(), documentNumber.trim())
 				.orElseThrow(() -> new GuestNotFoundException("document"));
 	}
 

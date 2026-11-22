@@ -28,11 +28,6 @@ public class RoomInventoryAdapter implements RoomInventoryPort {
 	}
 
 	@Override
-	public void lockInventory(RoomTypeId id) {
-		rooms.lockInventory(id.value());
-	}
-
-	@Override
 	public int sellableUnits(RoomTypeId id) {
 		return rooms.sellableUnits(id.value());
 	}

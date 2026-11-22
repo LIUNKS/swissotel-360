@@ -3,7 +3,7 @@ package com.swissotel.swissotel360.iam.interfaces.rest;
 import com.swissotel.swissotel360.iam.application.queryservices.UserQueryService;
 
 import com.swissotel.swissotel360.iam.application.commandservices.UserCommandService;
-import com.swissotel.swissotel360.iam.domain.model.queries.GetUserByIdQuery;
+import com.swissotel.swissotel360.iam.domain.model.queries.GetUserByPublicIdQuery;
 import com.swissotel.swissotel360.iam.interfaces.rest.resources.CreateUserResource;
 import com.swissotel.swissotel360.iam.interfaces.rest.resources.UserResource;
 import com.swissotel.swissotel360.iam.interfaces.rest.transform.CreateUserCommandFromResourceAssembler;
@@ -26,6 +26,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import java.util.UUID;
 
 /**
  * REST controller that exposes IAM user resources.
@@ -73,16 +74,16 @@ public class UsersController {
 	}
 
 	/**
-	 * Retrieves a user by identifier.
+	 * Retrieves a user by public identifier.
 	 *
-	 * @param userId
-	 *                   user identifier
+	 * @param userPublicId
+	 *                         public UUID identifier of the user
 	 * @return user resource when found
 	 * @see UserResource
 	 */
-	@GetMapping(value = "/{userId}")
-	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER') or @userAccessAuthorizationService.isSelf(authentication, #userId)")
-	@Operation(summary = "Get user by ID", description = "Retrieves a specific user's information by unique identifier.", security = @SecurityRequirement(name = "bearerAuth"))
+	@GetMapping(value = "/{userPublicId}")
+	@PreAuthorize("hasAnyRole('SUPER_ADMIN', 'MANAGER') or @userAccessAuthorizationService.isSelf(authentication, #userPublicId)")
+	@Operation(summary = "Get user by public ID", description = "Retrieves a specific user's information by public UUID identifier.", security = @SecurityRequirement(name = "bearerAuth"))
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "200", description = "User retrieved successfully", content = @Content(schema = @Schema(implementation = UserResource.class))),
 			@ApiResponse(responseCode = "401", description = "Unauthorized - JWT token required or invalid", content = @Content),
@@ -90,12 +91,12 @@ public class UsersController {
 			@ApiResponse(responseCode = "404", description = "User not found", content = @Content(schema = @Schema(implementation = ErrorResource.class)))
 	})
 	public ResponseEntity<?> getUserById(
-			@PathVariable @Parameter(description = "Unique user identifier", example = "1", required = true) Long userId) {
-		var getUserByIdQuery = new GetUserByIdQuery(userId);
-		var user = userQueryService.handle(getUserByIdQuery);
+			@PathVariable @Parameter(description = "Public user UUID identifier", example = "b1398429-d78b-4f7b-be43-bb3fd351bc68", required = true) UUID userPublicId) {
+		var query = new GetUserByPublicIdQuery(userPublicId);
+		var user = userQueryService.handle(query);
 		if (user.isEmpty()) {
 			return ErrorResponseAssembler.toErrorResponseFromApplicationError(
-					ApplicationError.notFound("user", String.valueOf(userId)));
+					ApplicationError.notFound("user", userPublicId.toString()));
 		}
 		var userResource = UserResourceFromEntityAssembler.toResourceFromEntity(user.get());
 		return ResponseEntity.ok(userResource);

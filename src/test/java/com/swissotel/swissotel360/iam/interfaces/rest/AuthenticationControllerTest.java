@@ -7,11 +7,14 @@ import com.swissotel.swissotel360.iam.application.queryservices.UserQueryService
 import com.swissotel.swissotel360.iam.domain.model.aggregates.User;
 import com.swissotel.swissotel360.iam.domain.model.entities.Role;
 import com.swissotel.swissotel360.iam.domain.model.queries.GetUserByEmailQuery;
+import com.swissotel.swissotel360.iam.domain.model.queries.GetUserByIdQuery;
 import com.swissotel.swissotel360.iam.domain.model.valueobjects.Roles;
+import com.swissotel.swissotel360.iam.domain.repositories.RolePermissionRepository;
 import com.swissotel.swissotel360.iam.domain.repositories.RoleRepository;
 import com.swissotel.swissotel360.iam.domain.repositories.UserRepository;
 import com.swissotel.swissotel360.iam.interfaces.rest.resources.AuthenticatedUserResource;
 import com.swissotel.swissotel360.iam.interfaces.rest.resources.SignInResource;
+import com.swissotel.swissotel360.shared.infrastructure.security.AuthenticatedUserPrincipal;
 import com.swissotel.swissotel360.shared.interfaces.rest.resources.ErrorResource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,6 +27,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,6 +42,7 @@ class AuthenticationControllerTest {
 
 	private final UserRepository userRepository = mock(UserRepository.class);
 	private final RoleRepository roleRepository = mock(RoleRepository.class);
+	private final RolePermissionRepository rolePermissionRepository = mock(RolePermissionRepository.class);
 	private final HashingService hashingService = mock(HashingService.class);
 	private final TokenService tokenService = mock(TokenService.class);
 	private final UserQueryService userQueryService = mock(UserQueryService.class);
@@ -51,7 +56,8 @@ class AuthenticationControllerTest {
 		previousDefaultLocale = Locale.getDefault();
 		Locale.setDefault(Locale.ENGLISH);
 		LocaleContextHolder.setLocale(Locale.ENGLISH);
-		userCommandService = new UserCommandServiceImpl(userRepository, roleRepository, hashingService, tokenService);
+		userCommandService = new UserCommandServiceImpl(userRepository, roleRepository, rolePermissionRepository,
+				hashingService, tokenService);
 		controller = new AuthenticationController(userCommandService, userQueryService, false, "Lax", 7L);
 	}
 
@@ -108,7 +114,9 @@ class AuthenticationControllerTest {
 		when(userRepository.findByEmail("john.doe@swissotel.com")).thenReturn(Optional.of(existingUser));
 		when(hashingService.matches("secretPassword123", "encoded-password")).thenReturn(true);
 		when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-		when(tokenService.generateToken("john.doe@swissotel.com")).thenReturn("jwt-token-value");
+		when(rolePermissionRepository.findPermissionsByRoleId(1L)).thenReturn(List.of("reservations.create"));
+		when(tokenService.generateToken(1L, userId, "john.doe@swissotel.com", "ROLE_GUEST",
+				List.of("reservations.create"))).thenReturn("jwt-token-value");
 
 		var response = controller.signIn(new SignInResource("john.doe@swissotel.com", "secretPassword123"));
 
@@ -126,9 +134,10 @@ class AuthenticationControllerTest {
 	@Test
 	void signInIncludesSecureFlagWhenConfiguredForHttps() {
 		var secureController = new AuthenticationController(userCommandService, userQueryService, true, "Strict", 7L);
+		var userPublicId = UUID.randomUUID();
 		var existingUser = new User(
 				1L,
-				UUID.randomUUID(),
+				userPublicId,
 				"John Doe",
 				"john.doe@swissotel.com",
 				"encoded-password",
@@ -139,7 +148,9 @@ class AuthenticationControllerTest {
 		when(userRepository.findByEmail("john.doe@swissotel.com")).thenReturn(Optional.of(existingUser));
 		when(hashingService.matches("secretPassword123", "encoded-password")).thenReturn(true);
 		when(userRepository.save(any(User.class))).thenAnswer(invocation -> invocation.getArgument(0));
-		when(tokenService.generateToken("john.doe@swissotel.com")).thenReturn("jwt-token-value");
+		when(rolePermissionRepository.findPermissionsByRoleId(1L)).thenReturn(List.of("reservations.create"));
+		when(tokenService.generateToken(1L, userPublicId, "john.doe@swissotel.com", "ROLE_GUEST",
+				List.of("reservations.create"))).thenReturn("jwt-token-value");
 
 		var response = secureController.signIn(new SignInResource("john.doe@swissotel.com", "secretPassword123"));
 
@@ -176,9 +187,11 @@ class AuthenticationControllerTest {
 				"active",
 				null);
 
-		when(userQueryService.handle(new GetUserByEmailQuery("john.doe@swissotel.com")))
+		when(userQueryService.handle(new GetUserByIdQuery(1L)))
 				.thenReturn(Optional.of(existingUser));
-		var auth = new UsernamePasswordAuthenticationToken("john.doe@swissotel.com", "n/a", List.of());
+		var principal = new AuthenticatedUserPrincipal(1L, userId, "john.doe@swissotel.com", "ROLE_GUEST",
+				Set.of("reservations.view"));
+		var auth = new UsernamePasswordAuthenticationToken(principal, "n/a", principal.getAuthorities());
 
 		var okResponse = controller.me(auth);
 		assertEquals(HttpStatus.OK, okResponse.getStatusCode());

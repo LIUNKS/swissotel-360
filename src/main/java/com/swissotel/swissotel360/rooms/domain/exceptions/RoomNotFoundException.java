@@ -6,4 +6,8 @@ public class RoomNotFoundException extends RuntimeException {
 	public RoomNotFoundException(UUID id) {
 		super("Room not found: " + id);
 	}
+
+	public RoomNotFoundException(Long id) {
+		super("Room not found: " + id);
+	}
 }

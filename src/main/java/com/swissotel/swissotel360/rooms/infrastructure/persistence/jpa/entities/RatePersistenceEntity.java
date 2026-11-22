@@ -3,6 +3,7 @@ package com.swissotel.swissotel360.rooms.infrastructure.persistence.jpa.entities
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Entity
 @Table(name = "rates")
@@ -10,6 +11,8 @@ public class RatePersistenceEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	@Column(name = "public_id", nullable = false, unique = true, updatable = false)
+	private UUID publicId;
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "room_type_id", nullable = false)
 	private RoomTypePersistenceEntity roomType;
@@ -25,9 +28,10 @@ public class RatePersistenceEntity {
 	protected RatePersistenceEntity() {
 	}
 
-	public RatePersistenceEntity(Long id, RoomTypePersistenceEntity roomType, BigDecimal price, String season,
-			LocalDate validFrom, LocalDate validTo) {
+	public RatePersistenceEntity(Long id, UUID publicId, RoomTypePersistenceEntity roomType, BigDecimal price,
+			String season, LocalDate validFrom, LocalDate validTo) {
 		this.id = id;
+		this.publicId = publicId;
 		this.roomType = roomType;
 		this.price = price;
 		this.season = season;
@@ -37,6 +41,10 @@ public class RatePersistenceEntity {
 
 	public Long getId() {
 		return id;
+	}
+
+	public UUID getPublicId() {
+		return publicId;
 	}
 
 	public RoomTypePersistenceEntity getRoomType() {

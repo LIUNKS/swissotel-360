@@ -8,9 +8,7 @@ import com.swissotel.swissotel360.reservations.application.facade.ReservationFac
 import com.swissotel.swissotel360.reservations.domain.exceptions.ReservationNotFoundException;
 import com.swissotel.swissotel360.reservations.domain.aggregates.Reservation;
 import com.swissotel.swissotel360.reservations.domain.model.ReservationCode;
-import com.swissotel.swissotel360.reservations.domain.model.ReservationId;
 import com.swissotel.swissotel360.reservations.domain.repositories.ReservationRepository;
-import java.util.UUID;
 
 public class ReservationsContextFacadeImpl implements ReservationFacade {
 	private final ReservationRepository repository;
@@ -22,8 +20,9 @@ public class ReservationsContextFacadeImpl implements ReservationFacade {
 	}
 
 	@Override
-	public ReservationSnapshot getForCheckIn(UUID id) {
-		var r = repository.findById(new ReservationId(id)).orElseThrow(() -> new ReservationNotFoundException(id));
+	public ReservationSnapshot getForCheckIn(Long reservationId) {
+		var r = repository.findByInternalId(reservationId)
+				.orElseThrow(() -> new ReservationNotFoundException(reservationId));
 		return snapshot(r);
 	}
 
@@ -39,12 +38,16 @@ public class ReservationsContextFacadeImpl implements ReservationFacade {
 	}
 
 	@Override
-	public void markCompleted(UUID id) {
-		commands.complete(new CompleteReservationCommand(id));
+	public void markCompleted(Long reservationId) {
+		var r = repository.findByInternalId(reservationId)
+				.orElseThrow(() -> new ReservationNotFoundException(reservationId));
+		commands.complete(new CompleteReservationCommand(r.id().value()));
 	}
 
 	@Override
-	public void confirmPrepaid(UUID id) {
-		commands.confirm(new ConfirmReservationCommand(id));
+	public void confirmPrepaid(Long reservationId) {
+		var r = repository.findByInternalId(reservationId)
+				.orElseThrow(() -> new ReservationNotFoundException(reservationId));
+		commands.confirm(new ConfirmReservationCommand(r.id().value()));
 	}
 }

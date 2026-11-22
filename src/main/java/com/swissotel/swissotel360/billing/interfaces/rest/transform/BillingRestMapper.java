@@ -38,12 +38,12 @@ public final class BillingRestMapper {
 	}
 
 	private static ChargeResource toResource(Charge c, FolioView v) {
-		return new ChargeResource(c.dbId(), c.concept(), c.amount(), c.chargedAt(),
+		return new ChargeResource(c.publicId(), c.concept(), c.amount(), c.chargedAt(),
 				c.serviceRequestId() == null ? null : v.serviceRequestPublicIds().get(c.serviceRequestId()));
 	}
 
 	public static ChargeResultResource toResult(Charge c) {
-		return new ChargeResultResource(c.dbId(), c.concept(), c.amount(), c.chargedAt());
+		return new ChargeResultResource(c.publicId(), c.concept(), c.amount(), c.chargedAt());
 	}
 
 	public static PaymentMethodResource toResource(PaymentMethod m) {

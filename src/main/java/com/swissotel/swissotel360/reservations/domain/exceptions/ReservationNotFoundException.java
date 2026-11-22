@@ -7,6 +7,10 @@ public class ReservationNotFoundException extends RuntimeException {
 		super("Reservation not found: " + id);
 	}
 
+	public ReservationNotFoundException(Long id) {
+		super("Reservation not found: " + id);
+	}
+
 	public ReservationNotFoundException(String code) {
 		super("Reservation not found: " + code);
 	}

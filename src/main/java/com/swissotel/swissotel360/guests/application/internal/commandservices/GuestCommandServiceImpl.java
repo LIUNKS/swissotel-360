@@ -33,12 +33,13 @@ public class GuestCommandServiceImpl implements GuestCommandService {
 	@Override
 	@Transactional
 	public Guest create(CreateGuestCommand command) {
-		var documentType = documentTypeRepository.findById(command.documentTypeId())
-				.orElseThrow(() -> new DocumentTypeNotFoundException(command.documentTypeId()));
+		var code = command.documentTypeCode() == null ? "" : command.documentTypeCode().trim();
+		var documentType = documentTypeRepository.findByCode(code)
+				.orElseThrow(() -> new DocumentTypeNotFoundException(code));
 		var identityDocument = new IdentityDocumentNumber(documentType.code(), command.documentNumber());
 		var number = identityDocument.value();
-		if (guestRepository.existsByDocument(command.documentTypeId(), number)) {
-			throw new DuplicateGuestException(command.documentTypeId(), number);
+		if (guestRepository.existsByDocument(documentType.id(), number)) {
+			throw new DuplicateGuestException(documentType.code(), number);
 		}
 		var guest = new Guest(null, null, null, documentType.id(), documentType.code(), number,
 				command.firstName(), command.lastName(), command.email(), command.phone(), command.countryOfOrigin(),

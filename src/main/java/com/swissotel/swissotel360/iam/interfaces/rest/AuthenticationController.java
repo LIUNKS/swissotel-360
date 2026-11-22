@@ -3,6 +3,8 @@ package com.swissotel.swissotel360.iam.interfaces.rest;
 import com.swissotel.swissotel360.iam.application.commandservices.UserCommandService;
 import com.swissotel.swissotel360.iam.application.queryservices.UserQueryService;
 import com.swissotel.swissotel360.iam.domain.model.queries.GetUserByEmailQuery;
+import com.swissotel.swissotel360.iam.domain.model.queries.GetUserByIdQuery;
+import com.swissotel.swissotel360.shared.infrastructure.security.AuthenticatedUserPrincipal;
 import com.swissotel.swissotel360.iam.interfaces.rest.resources.AuthenticatedUserResource;
 import com.swissotel.swissotel360.iam.interfaces.rest.resources.SignInResource;
 import com.swissotel.swissotel360.iam.interfaces.rest.resources.SignUpResource;
@@ -125,7 +127,9 @@ public class AuthenticationController {
 			return ErrorResponseAssembler.toErrorResponseFromApplicationError(
 					ApplicationError.unauthorized("Authentication required"));
 		}
-		var user = userQueryService.handle(new GetUserByEmailQuery(authentication.getName()));
+		var user = authentication.getPrincipal() instanceof AuthenticatedUserPrincipal principal
+				? userQueryService.handle(new GetUserByIdQuery(principal.userId()))
+				: userQueryService.handle(new GetUserByEmailQuery(authentication.getName()));
 		if (user.isEmpty()) {
 			return ErrorResponseAssembler.toErrorResponseFromApplicationError(
 					ApplicationError.unauthorized("Authenticated user not found"));
