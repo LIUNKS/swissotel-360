@@ -13,8 +13,6 @@ public interface RoomInventoryPort {
 
 	Optional<RoomTypeSnapshot> findRoomTypeById(RoomTypeId roomTypeId);
 
-	void lockInventory(RoomTypeId roomTypeId);
-
 	int sellableUnits(RoomTypeId roomTypeId);
 
 	PriceQuote quote(RoomTypeId roomTypeId, StayPeriod period);

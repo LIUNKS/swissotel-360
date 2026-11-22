@@ -11,7 +11,6 @@ import com.swissotel.swissotel360.stays.domain.model.DigitalKey;
 import com.swissotel.swissotel360.stays.domain.model.StayId;
 import com.swissotel.swissotel360.stays.domain.repositories.StayRepository;
 import com.swissotel.swissotel360.reservations.interfaces.acl.ReservationContextSnapshot;
-import com.swissotel.swissotel360.rooms.domain.model.valueobjects.RoomStatus;
 import com.swissotel.swissotel360.rooms.interfaces.acl.RoomInfoSnapshot;
 import java.time.Clock;
 import java.time.Instant;
@@ -48,9 +47,9 @@ public final class StayCommandServiceImpl implements StayCommandService {
 		var stay = Stay.checkIn(reservation.internalId(), room.id(), reservation.guestId(),
 				collaborators.currentUserId(), Instant.now(clock));
 		var saved = stays.save(stay);
-		collaborators.markRoomOccupied(room.publicId());
+		collaborators.markRoomOccupied(room.id());
 		// ponytail: reservation is completed at check-in (it cannot be cancelled or re-used afterwards)
-		collaborators.completeReservation(reservation.publicId());
+		collaborators.completeReservation(reservation.internalId());
 		events.publishAfterCommit(saved, stay.domainEvents());
 		return new StayView(saved, room.publicId(), room.roomNumber());
 	}
@@ -60,9 +59,7 @@ public final class StayCommandServiceImpl implements StayCommandService {
 		var stay = find(command.stayPublicId());
 		stay.checkOut(Instant.now(clock));
 		var saved = stays.save(stay);
-		collaborators.markRoomCheckedOut(
-				collaborators.findRoom(stay.roomId()).orElseThrow(() -> new IllegalStateException("Room missing"))
-						.publicId());
+		collaborators.markRoomCheckedOut(stay.roomId());
 		events.publishAfterCommit(saved, stay.domainEvents());
 		return saved;
 	}
@@ -76,10 +73,11 @@ public final class StayCommandServiceImpl implements StayCommandService {
 
 	@Override
 	public DigitalKey revokeKey(RevokeDigitalKeyCommand command) {
-		var stay = stays.findByDigitalKeyId(command.keyId())
-				.orElseThrow(() -> new DigitalKeyNotFoundException(command.keyId()));
-		stay.revokeKey(command.keyId(), Instant.now(clock));
-		return stays.save(stay).keys().stream().filter(k -> command.keyId().equals(k.id())).findFirst().orElseThrow();
+		var stay = stays.findByDigitalKeyPublicId(command.keyPublicId())
+				.orElseThrow(() -> new DigitalKeyNotFoundException(command.keyPublicId()));
+		stay.revokeKey(command.keyPublicId(), Instant.now(clock));
+		return stays.save(stay).keys().stream().filter(k -> command.keyPublicId().equals(k.publicId())).findFirst()
+				.orElseThrow();
 	}
 
 	private Stay find(java.util.UUID id) {
@@ -98,7 +96,7 @@ public final class StayCommandServiceImpl implements StayCommandService {
 		if (command.roomPublicId() != null) {
 			var room = collaborators.findRoom(command.roomPublicId())
 					.orElseThrow(() -> new RoomNotAvailableException("room not found"));
-			if (room.status() != RoomStatus.AVAILABLE)
+			if (!room.isAvailable())
 				throw new RoomNotAvailableException("room is " + room.status());
 			return room;
 		}

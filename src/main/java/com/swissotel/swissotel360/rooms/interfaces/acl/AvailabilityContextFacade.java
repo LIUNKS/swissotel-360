@@ -12,8 +12,6 @@ public interface AvailabilityContextFacade {
 
 	java.util.Optional<RoomTypeInventorySnapshot> findRoomTypeById(Long roomTypeId);
 
-	void lockInventory(Long roomTypeId);
-
 	int sellableUnits(Long roomTypeId);
 
 	RoomAvailabilitySnapshot quote(Long roomTypeId, LocalDate checkIn, LocalDate checkOut);

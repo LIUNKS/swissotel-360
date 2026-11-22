@@ -22,6 +22,15 @@ public class DocumentTypeRepositoryImpl implements DocumentTypeRepository {
 	}
 
 	@Override
+	public Optional<DocumentType> findByCode(String code) {
+		if (code == null || code.isBlank()) {
+			return Optional.empty();
+		}
+		return repository.findByCodeIgnoreCase(code.trim()).map(entity -> new DocumentType(entity.getId(),
+				entity.getCode(), entity.getName(), entity.isHasCheckDigit()));
+	}
+
+	@Override
 	public List<DocumentType> findAll() {
 		return repository.findAll(SortByCode.INSTANCE).stream()
 				.map(entity -> new DocumentType(entity.getId(), entity.getCode(), entity.getName(),

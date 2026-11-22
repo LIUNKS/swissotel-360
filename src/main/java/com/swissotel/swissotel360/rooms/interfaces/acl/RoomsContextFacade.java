@@ -9,7 +9,7 @@ public interface RoomsContextFacade {
 
 	java.util.Optional<RoomInfoSnapshot> findFirstAvailable(Long roomTypeId);
 
-	RoomStatusSnapshot markOccupied(UUID roomPublicId);
+	RoomStatusSnapshot markOccupied(Long roomId);
 
-	RoomStatusSnapshot markCheckedOut(UUID roomPublicId);
+	RoomStatusSnapshot markCheckedOut(Long roomId);
 }

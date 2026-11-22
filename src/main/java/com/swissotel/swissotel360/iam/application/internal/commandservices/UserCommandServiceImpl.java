@@ -7,6 +7,7 @@ import com.swissotel.swissotel360.iam.domain.model.aggregates.User;
 import com.swissotel.swissotel360.iam.domain.model.commands.SignInCommand;
 import com.swissotel.swissotel360.iam.domain.model.commands.SignUpCommand;
 import com.swissotel.swissotel360.iam.domain.model.valueobjects.EmailAddress;
+import com.swissotel.swissotel360.iam.domain.repositories.RolePermissionRepository;
 import com.swissotel.swissotel360.iam.domain.repositories.RoleRepository;
 import com.swissotel.swissotel360.iam.domain.repositories.UserRepository;
 import com.swissotel.swissotel360.shared.application.result.ApplicationError;
@@ -18,13 +19,15 @@ import org.springframework.stereotype.Service;
 public class UserCommandServiceImpl implements UserCommandService {
 	private final UserRepository userRepository;
 	private final RoleRepository roleRepository;
+	private final RolePermissionRepository rolePermissionRepository;
 	private final HashingService hashingService;
 	private final TokenService tokenService;
 
 	public UserCommandServiceImpl(UserRepository userRepository, RoleRepository roleRepository,
-			HashingService hashingService, TokenService tokenService) {
+			RolePermissionRepository rolePermissionRepository, HashingService hashingService, TokenService tokenService) {
 		this.userRepository = userRepository;
 		this.roleRepository = roleRepository;
+		this.rolePermissionRepository = rolePermissionRepository;
 		this.hashingService = hashingService;
 		this.tokenService = tokenService;
 	}
@@ -58,7 +61,9 @@ public class UserCommandServiceImpl implements UserCommandService {
 		var user = userOpt.get();
 		user.updateLastLoginAt();
 		var updatedUser = userRepository.save(user);
-		var token = tokenService.generateToken(updatedUser.getEmail());
+		var permissions = rolePermissionRepository.findPermissionsByRoleId(updatedUser.getRole().getId());
+		var token = tokenService.generateToken(updatedUser.getId(), updatedUser.getPublicId(), updatedUser.getEmail(),
+				updatedUser.getRole().getStringName(), permissions);
 		return Result.success(new ImmutablePair<>(updatedUser, token));
 	}
 }

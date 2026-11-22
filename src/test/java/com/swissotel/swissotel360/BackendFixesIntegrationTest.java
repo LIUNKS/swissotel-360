@@ -139,6 +139,9 @@ class BackendFixesIntegrationTest {
 							{"price":350.00,"season":"test-closed","validFrom":"2027-01-01","validTo":"2027-01-31"}
 							""");
 			assertEquals(201, closedRateResponse.statusCode(), closedRateResponse.body());
+			var closedRateJson = parseJsonObject(closedRateResponse.body());
+			assertFalse(closedRateJson.containsKey("id"), closedRateResponse.body());
+			assertNotNull(closedRateJson.get("publicId"));
 
 			var overlapResponse = postJson(client, port, rateBasePath, token,
 					"""
@@ -169,11 +172,14 @@ class BackendFixesIntegrationTest {
 	void roomsListWorksForAllFilterCombinationsAgainstPostgres(@LocalServerPort int port) throws Exception {
 		try (var client = HttpClient.newHttpClient()) {
 			var token = signInAsAdmin(client, port);
+			var roomTypesResp = get(client, port, "/api/v1/room-types", token);
+			assertEquals(200, roomTypesResp.statusCode(), roomTypesResp.body());
+			var roomTypePublicId = JsonPath.parse(roomTypesResp.body()).read("$[0].publicId", String.class);
 			var paths = List.of(
 					"/api/v1/rooms",
 					"/api/v1/rooms?status=AVAILABLE",
-					"/api/v1/rooms?roomTypeId=1",
-					"/api/v1/rooms?roomTypeId=1&status=AVAILABLE");
+					"/api/v1/rooms?roomTypePublicId=" + roomTypePublicId,
+					"/api/v1/rooms?roomTypePublicId=" + roomTypePublicId + "&status=AVAILABLE");
 
 			for (var path : paths) {
 				var response = get(client, port, path, token);
@@ -201,7 +207,7 @@ class BackendFixesIntegrationTest {
 						"Leaked spring package in: " + response.body());
 			}
 
-			var userNotFound = get(client, port, "/api/v1/users/99999999", token);
+			var userNotFound = get(client, port, "/api/v1/users/" + UUID.randomUUID(), token);
 			assertEquals(404, userNotFound.statusCode(), userNotFound.body());
 			assertFalse(userNotFound.body().isBlank());
 			var userJson = parseJsonObject(userNotFound.body());

@@ -11,6 +11,7 @@ import com.swissotel.swissotel360.rooms.domain.exceptions.RateOverlapException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class RateRepositoryImpl implements RateRepository {
@@ -49,6 +50,10 @@ public class RateRepositoryImpl implements RateRepository {
 
 	public Optional<Rate> findById(Long id) {
 		return repository.findById(id).map(RoomsPersistenceAssembler::toDomain);
+	}
+
+	public Optional<Rate> findByPublicId(UUID publicId) {
+		return repository.findByPublicId(publicId).map(RoomsPersistenceAssembler::toDomain);
 	}
 
 	public void delete(Rate rate) {

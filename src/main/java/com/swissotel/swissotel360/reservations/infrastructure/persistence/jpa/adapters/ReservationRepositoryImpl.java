@@ -50,6 +50,11 @@ public class ReservationRepositoryImpl implements ReservationRepository {
 	}
 
 	@Override
+	public Optional<Reservation> findByInternalId(Long internalId) {
+		return repository.findById(internalId).map(ReservationPersistenceAssembler::toDomain);
+	}
+
+	@Override
 	public Optional<Reservation> findByCode(ReservationCode code) {
 		return repository.findByReservationCode(code.value()).map(ReservationPersistenceAssembler::toDomain);
 	}
@@ -57,6 +62,11 @@ public class ReservationRepositoryImpl implements ReservationRepository {
 	@Override
 	public Optional<Long> findInternalId(ReservationId id) {
 		return repository.findByPublicId(id.value()).map(ReservationPersistenceEntity::getId);
+	}
+
+	@Override
+	public void lockRoomType(RoomTypeId roomTypeId) {
+		repository.acquireRoomTypeLock(7301_000_000_000L + roomTypeId.value());
 	}
 
 	@Override

@@ -15,6 +15,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
 public class StayRepositoryImpl implements StayRepository {
@@ -62,8 +63,8 @@ public class StayRepositoryImpl implements StayRepository {
 	}
 
 	@Override
-	public Optional<Stay> findByDigitalKeyId(Long keyId) {
-		return keys.findById(keyId).flatMap(k -> stays.findById(k.getStayId())).map(this::toDomain);
+	public Optional<Stay> findByDigitalKeyPublicId(UUID keyPublicId) {
+		return keys.findByPublicId(keyPublicId).flatMap(k -> stays.findById(k.getStayId())).map(this::toDomain);
 	}
 
 	@Override

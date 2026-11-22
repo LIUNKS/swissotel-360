@@ -7,8 +7,11 @@ import org.springframework.data.repository.query.Param;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface RatePersistenceRepository extends JpaRepository<RatePersistenceEntity, Long> {
+	Optional<RatePersistenceEntity> findByPublicId(UUID publicId);
+
 	List<RatePersistenceEntity> findByRoomType_IdOrderByValidFromDesc(Long roomTypeId);
 
 	boolean existsByRoomType_Id(Long roomTypeId);

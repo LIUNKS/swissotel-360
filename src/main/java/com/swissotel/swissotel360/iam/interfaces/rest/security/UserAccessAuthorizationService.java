@@ -2,8 +2,10 @@ package com.swissotel.swissotel360.iam.interfaces.rest.security;
 
 import com.swissotel.swissotel360.iam.application.queryservices.UserQueryService;
 import com.swissotel.swissotel360.iam.domain.model.queries.GetUserByEmailQuery;
+import com.swissotel.swissotel360.shared.infrastructure.security.AuthenticatedUserPrincipal;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import java.util.UUID;
 
 /**
  * Authorization helper for verifying whether the authenticated user owns a user resource.
@@ -17,17 +19,20 @@ public class UserAccessAuthorizationService {
 	}
 
 	/**
-	 * Checks whether the current authentication corresponds to the requested user id.
+	 * Checks whether the current authentication corresponds to the requested user public id.
 	 */
-	public boolean isSelf(Authentication authentication, Long userId) {
-		if (authentication == null || !authentication.isAuthenticated() || userId == null) {
+	public boolean isSelf(Authentication authentication, UUID userPublicId) {
+		if (authentication == null || !authentication.isAuthenticated() || userPublicId == null) {
 			return false;
+		}
+		if (authentication.getPrincipal() instanceof AuthenticatedUserPrincipal principal) {
+			return userPublicId.equals(principal.publicId());
 		}
 		var email = authentication.getName();
 		if (email == null || email.isBlank()) {
 			return false;
 		}
 		var user = userQueryService.handle(new GetUserByEmailQuery(email));
-		return user.isPresent() && userId.equals(user.get().getId());
+		return user.isPresent() && userPublicId.equals(user.get().getPublicId());
 	}
 }

@@ -50,51 +50,56 @@ class RbacSecurityIntegrationTest {
 
 			var adminMeResp = get(client, port, "/api/v1/authentication/me", adminToken);
 			assertEquals(200, adminMeResp.statusCode(), adminMeResp.body());
-			long adminId = ((Number) JsonPath.parse(adminMeResp.body()).read("$.id")).longValue();
+			var adminJson = parseJsonObject(adminMeResp.body());
+			assertFalse(adminJson.containsKey("id"), "Public response must not expose internal id: " + adminMeResp.body());
+			var adminPublicId = UUID.fromString(JsonPath.parse(adminMeResp.body()).read("$.publicId", String.class));
 
 			var createStaffResp = postJson(client, port, "/api/v1/users", adminToken,
 					"""
 							{"fullName":"RBAC Staff","email":"%s","password":"StaffPass123!","role":"ROLE_RECEPTIONIST"}
 							""".formatted(staffEmail));
 			assertEquals(201, createStaffResp.statusCode(), createStaffResp.body());
-			long staffId = ((Number) JsonPath.parse(createStaffResp.body()).read("$.id")).longValue();
-			createdUsers.add(UUID.fromString(JsonPath.parse(createStaffResp.body()).read("$.publicId", String.class)));
+			assertFalse(parseJsonObject(createStaffResp.body()).containsKey("id"), createStaffResp.body());
+			var staffPublicId = UUID.fromString(JsonPath.parse(createStaffResp.body()).read("$.publicId", String.class));
+			createdUsers.add(staffPublicId);
 
 			var createGuestUserResp = postJson(client, port, "/api/v1/authentication/sign-up", null,
 					"""
 							{"fullName":"RBAC Guest","email":"%s","password":"GuestPass123!"}
 							""".formatted(guestEmail));
 			assertEquals(201, createGuestUserResp.statusCode(), createGuestUserResp.body());
-			long guestId = ((Number) JsonPath.parse(createGuestUserResp.body()).read("$.id")).longValue();
-			createdUsers
-					.add(UUID.fromString(JsonPath.parse(createGuestUserResp.body()).read("$.publicId", String.class)));
+			assertFalse(parseJsonObject(createGuestUserResp.body()).containsKey("id"), createGuestUserResp.body());
+			var guestPublicId = UUID
+					.fromString(JsonPath.parse(createGuestUserResp.body()).read("$.publicId", String.class));
+			createdUsers.add(guestPublicId);
 
 			var staffToken = signIn(client, port, staffEmail, "StaffPass123!");
 			var guestToken = signIn(client, port, guestEmail, "GuestPass123!");
 
-			var guestSelfResp = get(client, port, "/api/v1/users/" + guestId, guestToken);
+			var guestSelfResp = get(client, port, "/api/v1/users/" + guestPublicId, guestToken);
 			assertEquals(200, guestSelfResp.statusCode(), guestSelfResp.body());
+			assertFalse(parseJsonObject(guestSelfResp.body()).containsKey("id"), guestSelfResp.body());
 			assertEquals(guestEmail, JsonPath.parse(guestSelfResp.body()).read("$.email", String.class));
 
-			var guestToAdminResp = get(client, port, "/api/v1/users/" + adminId, guestToken);
+			var guestToAdminResp = get(client, port, "/api/v1/users/" + adminPublicId, guestToken);
 			assertEquals(403, guestToAdminResp.statusCode(), guestToAdminResp.body());
 			assertEquals("FORBIDDEN", parseJsonObject(guestToAdminResp.body()).get("code"));
 
-			var guestToStaffResp = get(client, port, "/api/v1/users/" + staffId, guestToken);
+			var guestToStaffResp = get(client, port, "/api/v1/users/" + staffPublicId, guestToken);
 			assertEquals(403, guestToStaffResp.statusCode(), guestToStaffResp.body());
 			assertEquals("FORBIDDEN", parseJsonObject(guestToStaffResp.body()).get("code"));
 
-			var staffToGuestResp = get(client, port, "/api/v1/users/" + guestId, staffToken);
+			var staffToGuestResp = get(client, port, "/api/v1/users/" + guestPublicId, staffToken);
 			assertEquals(403, staffToGuestResp.statusCode(), staffToGuestResp.body());
 			assertEquals("FORBIDDEN", parseJsonObject(staffToGuestResp.body()).get("code"));
 
-			var staffSelfResp = get(client, port, "/api/v1/users/" + staffId, staffToken);
+			var staffSelfResp = get(client, port, "/api/v1/users/" + staffPublicId, staffToken);
 			assertEquals(200, staffSelfResp.statusCode(), staffSelfResp.body());
 
-			var adminToGuestResp = get(client, port, "/api/v1/users/" + guestId, adminToken);
+			var adminToGuestResp = get(client, port, "/api/v1/users/" + guestPublicId, adminToken);
 			assertEquals(200, adminToGuestResp.statusCode(), adminToGuestResp.body());
 
-			var adminNotFoundResp = get(client, port, "/api/v1/users/99999999", adminToken);
+			var adminNotFoundResp = get(client, port, "/api/v1/users/" + UUID.randomUUID(), adminToken);
 			assertEquals(404, adminNotFoundResp.statusCode(), adminNotFoundResp.body());
 			assertEquals("USER_NOT_FOUND", parseJsonObject(adminNotFoundResp.body()).get("code"));
 		} finally {
@@ -126,14 +131,15 @@ class RbacSecurityIntegrationTest {
 
 			var docTypesResp = get(client, port, "/api/v1/document-types", adminToken);
 			assertEquals(200, docTypesResp.statusCode(), docTypesResp.body());
-			Long passportTypeId = null;
+			String passportTypeCode = null;
 			List<Map<String, Object>> docTypes = JsonPath.parse(docTypesResp.body()).read("$");
 			for (var dt : docTypes) {
+				assertFalse(dt.containsKey("id"), "DocumentTypeResource must not expose internal id: " + dt);
 				if ("PASSPORT".equals(dt.get("code"))) {
-					passportTypeId = ((Number) dt.get("id")).longValue();
+					passportTypeCode = (String) dt.get("code");
 				}
 			}
-			assertNotNull(passportTypeId, "PASSPORT document type must exist");
+			assertNotNull(passportTypeCode, "PASSPORT document type must exist");
 
 			var roomTypeResp = postJson(client, port, "/api/v1/room-types", adminToken,
 					"""
@@ -148,6 +154,8 @@ class RbacSecurityIntegrationTest {
 							{"price":280.00,"season":"rbac","validFrom":"%s","validTo":"%s"}
 							""".formatted(today, today.plusDays(10)));
 			assertEquals(201, rateResp.statusCode(), rateResp.body());
+			assertFalse(parseJsonObject(rateResp.body()).containsKey("id"), rateResp.body());
+			assertNotNull(JsonPath.parse(rateResp.body()).read("$.publicId", String.class));
 
 			var roomResp = postJson(client, port, "/api/v1/rooms", adminToken,
 					"""
@@ -175,9 +183,9 @@ class RbacSecurityIntegrationTest {
 
 			var guestAResp = postJson(client, port, "/api/v1/guests", adminToken,
 					"""
-							{"documentTypeId":%d,"documentNumber":"%s","firstName":"Guest","lastName":"Alpha","email":"%s","phone":"+51999111001","countryOfOrigin":"Peru"}
+							{"documentTypeCode":"%s","documentNumber":"%s","firstName":"Guest","lastName":"Alpha","email":"%s","phone":"+51999111001","countryOfOrigin":"Peru"}
 							"""
-							.formatted(passportTypeId, docA, guestAEmail));
+							.formatted(passportTypeCode, docA, guestAEmail));
 			assertEquals(201, guestAResp.statusCode(), guestAResp.body());
 			var guestAId = UUID.fromString(JsonPath.parse(guestAResp.body()).read("$.publicId", String.class));
 			createdGuests.add(guestAId);
@@ -191,9 +199,9 @@ class RbacSecurityIntegrationTest {
 
 			var guestBResp = postJson(client, port, "/api/v1/guests", adminToken,
 					"""
-							{"documentTypeId":%d,"documentNumber":"%s","firstName":"Guest","lastName":"Beta","email":"%s","phone":"+51999111002","countryOfOrigin":"Peru"}
+							{"documentTypeCode":"%s","documentNumber":"%s","firstName":"Guest","lastName":"Beta","email":"%s","phone":"+51999111002","countryOfOrigin":"Peru"}
 							"""
-							.formatted(passportTypeId, docB, guestBEmail));
+							.formatted(passportTypeCode, docB, guestBEmail));
 			assertEquals(201, guestBResp.statusCode(), guestBResp.body());
 			var guestBId = UUID.fromString(JsonPath.parse(guestBResp.body()).read("$.publicId", String.class));
 			createdGuests.add(guestBId);

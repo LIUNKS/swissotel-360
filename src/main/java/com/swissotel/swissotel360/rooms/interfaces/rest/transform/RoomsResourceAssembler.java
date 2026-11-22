@@ -26,7 +26,7 @@ public final class RoomsResourceAssembler {
 	}
 
 	public static RateResource toResource(Rate rate) {
-		return new RateResource(rate.id(), rate.roomTypePublicId(), rate.price(), rate.season(), rate.validFrom(),
+		return new RateResource(rate.publicId(), rate.roomTypePublicId(), rate.price(), rate.season(), rate.validFrom(),
 				rate.validTo());
 	}
 

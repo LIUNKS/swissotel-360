@@ -3,6 +3,7 @@ package com.swissotel.swissotel360.shared.interfaces.rest.transform;
 import com.swissotel.swissotel360.shared.application.result.ApplicationError;
 import com.swissotel.swissotel360.shared.interfaces.rest.resources.ErrorResource;
 import org.jspecify.annotations.NullMarked;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -126,5 +127,26 @@ public final class ErrorResponseAssembler {
 			case "UNEXPECTED_ERROR" -> HttpStatus.INTERNAL_SERVER_ERROR;
 			default -> HttpStatus.INTERNAL_SERVER_ERROR;
 		};
+	}
+
+	public static ResponseEntity<ErrorResource> buildErrorResponse(
+			HttpStatusCode status,
+			String code,
+			String message,
+			Exception ex) {
+		return buildErrorResponse(status, code, message, safeMessage(ex));
+	}
+
+	public static ResponseEntity<ErrorResource> buildErrorResponse(
+			HttpStatusCode status,
+			String code,
+			String message,
+			@Nullable String details) {
+		return ResponseEntity.status(status).body(new ErrorResource(code, message, details));
+	}
+
+	public static @Nullable String safeMessage(Exception ex) {
+		var message = ex.getMessage();
+		return message == null || message.isBlank() ? null : message;
 	}
 }

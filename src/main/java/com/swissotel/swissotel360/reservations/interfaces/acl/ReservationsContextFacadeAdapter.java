@@ -5,7 +5,6 @@ import com.swissotel.swissotel360.reservations.domain.repositories.ReservationAv
 import org.springframework.stereotype.Component;
 import org.springframework.context.annotation.Lazy;
 import java.time.LocalDate;
-import java.util.UUID;
 
 @Component
 public class ReservationsContextFacadeAdapter implements ReservationsContextFacade {
@@ -29,8 +28,8 @@ public class ReservationsContextFacadeAdapter implements ReservationsContextFaca
 	}
 
 	@Override
-	public ReservationContextSnapshot getForCheckIn(UUID id) {
-		return toSnapshot(reservations.getForCheckIn(id));
+	public ReservationContextSnapshot getForCheckIn(Long reservationId) {
+		return toSnapshot(reservations.getForCheckIn(reservationId));
 	}
 
 	@Override
@@ -45,12 +44,12 @@ public class ReservationsContextFacadeAdapter implements ReservationsContextFaca
 	}
 
 	@Override
-	public void markCompleted(UUID id) {
-		reservations.markCompleted(id);
+	public void markCompleted(Long reservationId) {
+		reservations.markCompleted(reservationId);
 	}
 
 	@Override
-	public void confirmPrepaid(UUID id) {
-		reservations.confirmPrepaid(id);
+	public void confirmPrepaid(Long reservationId) {
+		reservations.confirmPrepaid(reservationId);
 	}
 }

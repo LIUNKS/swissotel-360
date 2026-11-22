@@ -43,16 +43,16 @@ public class RoomsContextFacadeImpl implements RoomsContextFacade {
 
 	private static RoomInfoSnapshot info(RoomView v) {
 		var r = v.room();
-		return new RoomInfoSnapshot(r.id(), r.publicId(), r.roomTypeId(), r.roomNumber(), r.status());
+		return new RoomInfoSnapshot(r.id(), r.publicId(), r.roomTypeId(), r.roomNumber(), r.status().name());
 	}
 
-	public RoomStatusSnapshot markOccupied(UUID id) {
-		var room = rooms.markOccupied(new MarkRoomOccupiedCommand(id));
-		return new RoomStatusSnapshot(room.publicId(), room.status());
+	public RoomStatusSnapshot markOccupied(Long roomId) {
+		var room = rooms.markOccupied(new MarkRoomOccupiedCommand(roomId));
+		return new RoomStatusSnapshot(room.publicId(), room.status().name());
 	}
 
-	public RoomStatusSnapshot markCheckedOut(UUID id) {
-		var room = rooms.markCheckedOut(new MarkRoomCheckedOutCommand(id));
-		return new RoomStatusSnapshot(room.publicId(), room.status());
+	public RoomStatusSnapshot markCheckedOut(Long roomId) {
+		var room = rooms.markCheckedOut(new MarkRoomCheckedOutCommand(roomId));
+		return new RoomStatusSnapshot(room.publicId(), room.status().name());
 	}
 }

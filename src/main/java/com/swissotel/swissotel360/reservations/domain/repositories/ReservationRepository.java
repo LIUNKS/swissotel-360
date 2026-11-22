@@ -11,9 +11,13 @@ public interface ReservationRepository {
 
 	Optional<Reservation> findById(ReservationId id);
 
+	Optional<Reservation> findByInternalId(Long internalId);
+
 	Optional<Reservation> findByCode(ReservationCode code);
 
 	Optional<Long> findInternalId(ReservationId id);
+
+	void lockRoomType(RoomTypeId roomTypeId);
 
 	long countActiveOverlapping(RoomTypeId type, StayPeriod period, Optional<ReservationId> excluding);
 

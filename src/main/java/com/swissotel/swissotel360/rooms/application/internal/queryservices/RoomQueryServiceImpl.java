@@ -4,11 +4,14 @@ import com.swissotel.swissotel360.rooms.application.queryservices.RoomQueryServi
 import com.swissotel.swissotel360.rooms.application.queryservices.RoomView;
 import com.swissotel.swissotel360.rooms.application.queryservices.RoomPageView;
 import com.swissotel.swissotel360.rooms.domain.exceptions.RoomNotFoundException;
+import com.swissotel.swissotel360.rooms.domain.exceptions.RoomTypeNotFoundException;
 import com.swissotel.swissotel360.rooms.domain.model.aggregates.Room;
 import com.swissotel.swissotel360.rooms.domain.model.queries.RoomFilter;
 import com.swissotel.swissotel360.rooms.domain.model.queries.GetRoomByPublicIdQuery;
+import com.swissotel.swissotel360.rooms.domain.model.valueobjects.RoomStatus;
 import com.swissotel.swissotel360.rooms.domain.repositories.RoomRepository;
 import com.swissotel.swissotel360.rooms.domain.repositories.RoomTypeRepository;
+import java.util.UUID;
 
 public class RoomQueryServiceImpl implements RoomQueryService {
 	private final RoomRepository rooms;
@@ -22,6 +25,17 @@ public class RoomQueryServiceImpl implements RoomQueryService {
 	public RoomPageView find(RoomFilter filter) {
 		var page = rooms.find(filter);
 		return new RoomPageView(page.content().stream().map(this::toView).toList(), page.totalElements());
+	}
+
+	@Override
+	public RoomPageView find(UUID roomTypePublicId, RoomStatus status, int page, int size) {
+		Long roomTypeId = null;
+		if (roomTypePublicId != null) {
+			roomTypeId = roomTypes.findByPublicId(roomTypePublicId)
+					.orElseThrow(() -> new RoomTypeNotFoundException(roomTypePublicId))
+					.id();
+		}
+		return find(new RoomFilter(roomTypeId, status, page, size));
 	}
 
 	public RoomView findByPublicId(GetRoomByPublicIdQuery query) {

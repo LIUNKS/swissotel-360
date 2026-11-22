@@ -8,5 +8,5 @@ public interface StaysContextFacade {
 
 	Optional<StayContextSnapshot> findById(Long stayId);
 
-	boolean isActive(UUID stayPublicId);
+	boolean isActive(Long stayId);
 }

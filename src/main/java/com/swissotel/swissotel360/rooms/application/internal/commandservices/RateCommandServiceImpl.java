@@ -34,26 +34,27 @@ public class RateCommandServiceImpl implements RateCommandService {
 			throw new RateOverlapException(conflicts.stream()
 					.map(r -> r.validFrom().isAfter(c.validFrom()) ? r.validFrom() : c.validFrom()).toList());
 		return rates
-				.save(new Rate(null, type.id(), type.publicId(), c.price(), c.season(), c.validFrom(), c.validTo()));
+				.save(new Rate(null, UUID.randomUUID(), type.id(), type.publicId(), c.price(), c.season(), c.validFrom(),
+						c.validTo()));
 	}
 
 	public Rate close(CloseRateCommand command) {
 		var type = roomTypes.findByPublicId(command.roomTypePublicId())
 				.orElseThrow(() -> new RoomTypeNotFoundException(command.roomTypePublicId()));
-		var rate = rates.findById(command.rateId())
-				.orElseThrow(() -> new RateEntityNotFoundException(command.rateId()));
+		var rate = rates.findByPublicId(command.ratePublicId())
+				.orElseThrow(() -> new RateEntityNotFoundException(command.ratePublicId()));
 		if (!rate.roomTypeId().equals(type.id()))
-			throw new RateEntityNotFoundException(command.rateId());
+			throw new RateEntityNotFoundException(command.ratePublicId());
 		return rates.save(rate.close(command.validTo()));
 	}
 
 	public void delete(DeleteRateCommand command) {
 		var type = roomTypes.findByPublicId(command.roomTypePublicId())
 				.orElseThrow(() -> new RoomTypeNotFoundException(command.roomTypePublicId()));
-		var rate = rates.findById(command.rateId())
-				.orElseThrow(() -> new RateEntityNotFoundException(command.rateId()));
+		var rate = rates.findByPublicId(command.ratePublicId())
+				.orElseThrow(() -> new RateEntityNotFoundException(command.ratePublicId()));
 		if (!rate.roomTypeId().equals(type.id()))
-			throw new RateEntityNotFoundException(command.rateId());
+			throw new RateEntityNotFoundException(command.ratePublicId());
 		rate.validateDeletable(LocalDate.now());
 		rates.delete(rate);
 	}

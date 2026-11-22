@@ -33,4 +33,7 @@ public interface ReservationPersistenceRepository
 	@Query("select r from ReservationPersistenceEntity r where r.status='pending' and r.paymentType=:paymentType and r.createdAt<:threshold order by r.createdAt asc")
 	List<ReservationPersistenceEntity> findExpired(@Param("threshold") Instant threshold,
 			@Param("paymentType") String paymentType, Pageable pageable);
+
+	@Query(value = "SELECT 1 FROM pg_advisory_xact_lock(:lockKey)", nativeQuery = true)
+	Integer acquireRoomTypeLock(@Param("lockKey") long lockKey);
 }

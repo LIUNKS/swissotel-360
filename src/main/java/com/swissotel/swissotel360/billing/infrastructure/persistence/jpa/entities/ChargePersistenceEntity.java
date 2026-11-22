@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "charges")
@@ -14,6 +15,8 @@ public class ChargePersistenceEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	@Column(name = "public_id", nullable = false, unique = true, updatable = false)
+	private UUID publicId;
 	@Column(name = "folio_id", nullable = false, updatable = false)
 	private Long folioId;
 	@Column(name = "service_request_id", updatable = false)

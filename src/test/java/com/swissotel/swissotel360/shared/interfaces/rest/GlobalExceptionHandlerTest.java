@@ -4,12 +4,14 @@ import com.swissotel.swissotel360.billing.domain.exceptions.*;
 import com.swissotel.swissotel360.billing.domain.model.DocumentType;
 import com.swissotel.swissotel360.billing.domain.model.FolioStatus;
 import com.swissotel.swissotel360.billing.domain.model.PaymentStatus;
+import com.swissotel.swissotel360.billing.interfaces.rest.BillingExceptionHandler;
 import com.swissotel.swissotel360.guests.domain.exceptions.DocumentTypeNotFoundException;
 import com.swissotel.swissotel360.guests.domain.exceptions.DuplicateGuestException;
 import com.swissotel.swissotel360.guests.domain.exceptions.GuestNotFoundException;
 import com.swissotel.swissotel360.guests.domain.exceptions.InvalidDocumentNumberException;
 import com.swissotel.swissotel360.guests.domain.exceptions.UserAlreadyLinkedException;
 import com.swissotel.swissotel360.guests.domain.exceptions.UserNotFoundException;
+import com.swissotel.swissotel360.guests.interfaces.rest.GuestsExceptionHandler;
 import com.swissotel.swissotel360.reservations.domain.exceptions.DuplicateReservationException;
 import com.swissotel.swissotel360.reservations.domain.exceptions.GuestProfileRequiredException;
 import com.swissotel.swissotel360.reservations.domain.exceptions.InvalidReservationTransitionException;
@@ -20,6 +22,7 @@ import com.swissotel.swissotel360.reservations.domain.exceptions.ReservationNotM
 import com.swissotel.swissotel360.reservations.domain.model.ReservationId;
 import com.swissotel.swissotel360.reservations.domain.model.ReservationStatus;
 import com.swissotel.swissotel360.reservations.domain.model.RoomTypeId;
+import com.swissotel.swissotel360.reservations.interfaces.rest.ReservationsExceptionHandler;
 import com.swissotel.swissotel360.rooms.domain.exceptions.DuplicateRoomNumberException;
 import com.swissotel.swissotel360.rooms.domain.exceptions.DuplicateRoomTypeException;
 import com.swissotel.swissotel360.rooms.domain.exceptions.InvalidRoomStatusTransitionException;
@@ -33,12 +36,15 @@ import com.swissotel.swissotel360.rooms.domain.exceptions.RoomNotFoundException;
 import com.swissotel.swissotel360.rooms.domain.exceptions.RoomTypeInUseException;
 import com.swissotel.swissotel360.rooms.domain.exceptions.RoomTypeNotFoundException;
 import com.swissotel.swissotel360.rooms.domain.model.valueobjects.RoomStatus;
+import com.swissotel.swissotel360.rooms.interfaces.rest.RoomsExceptionHandler;
 import com.swissotel.swissotel360.servicerequests.domain.exceptions.*;
 import com.swissotel.swissotel360.servicerequests.domain.model.ServiceRequestStatus;
+import com.swissotel.swissotel360.servicerequests.interfaces.rest.ServiceRequestsExceptionHandler;
 import com.swissotel.swissotel360.shared.interfaces.rest.resources.ErrorResource;
 import com.swissotel.swissotel360.stays.domain.exceptions.*;
 import com.swissotel.swissotel360.stays.domain.model.KeyStatus;
 import com.swissotel.swissotel360.stays.domain.model.StayStatus;
+import com.swissotel.swissotel360.stays.interfaces.rest.StaysExceptionHandler;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
@@ -60,54 +66,60 @@ import static org.junit.jupiter.api.Assertions.*;
 class GlobalExceptionHandlerTest {
 
 	private final GlobalExceptionHandler handler = new GlobalExceptionHandler();
+	private final GuestsExceptionHandler guestsHandler = new GuestsExceptionHandler();
+	private final RoomsExceptionHandler roomsHandler = new RoomsExceptionHandler();
+	private final ReservationsExceptionHandler reservationsHandler = new ReservationsExceptionHandler();
+	private final StaysExceptionHandler staysHandler = new StaysExceptionHandler();
+	private final ServiceRequestsExceptionHandler serviceRequestsHandler = new ServiceRequestsExceptionHandler();
+	private final BillingExceptionHandler billingHandler = new BillingExceptionHandler();
 
 	@Test
 	void mapsNotFoundExceptionsTo404ErrorResource() {
 		var uuid = UUID.randomUUID();
 
-		assertErrorResponse(handler.handleGuestNotFound(new GuestNotFoundException("guest-123")),
+		assertErrorResponse(guestsHandler.handleGuestNotFound(new GuestNotFoundException("guest-123")),
 				404, "GUEST_NOT_FOUND", "Guest not found", "guest-123");
-		assertErrorResponse(handler.handleDocumentTypeNotFound(new DocumentTypeNotFoundException(99L)),
-				404, "DOCUMENT_TYPE_NOT_FOUND", "Document type not found", "99");
-		assertErrorResponse(handler.handleUserNotFound(new UserNotFoundException(uuid)),
+		assertErrorResponse(guestsHandler.handleDocumentTypeNotFound(new DocumentTypeNotFoundException("UNKNOWN")),
+				404, "DOCUMENT_TYPE_NOT_FOUND", "Document type not found", "UNKNOWN");
+		assertErrorResponse(guestsHandler.handleUserNotFound(new UserNotFoundException(uuid)),
 				404, "USER_NOT_FOUND", "User not found", uuid.toString());
-		assertErrorResponse(handler.handleRoomTypeNotFound(new RoomTypeNotFoundException(uuid)),
+		assertErrorResponse(roomsHandler.handleRoomTypeNotFound(new RoomTypeNotFoundException(uuid)),
 				404, "ROOM_TYPE_NOT_FOUND", "Room type not found", uuid.toString());
-		assertErrorResponse(handler.handleRoomNotFound(new RoomNotFoundException(uuid)),
+		assertErrorResponse(roomsHandler.handleRoomNotFound(new RoomNotFoundException(uuid)),
 				404, "ROOM_NOT_FOUND", "Room not found", uuid.toString());
-		assertErrorResponse(handler.handleRateEntityNotFound(new RateEntityNotFoundException(5L)),
-				404, "RATE_NOT_FOUND", "Rate not found", "5");
+		assertErrorResponse(roomsHandler.handleRateEntityNotFound(new RateEntityNotFoundException(uuid)),
+				404, "RATE_NOT_FOUND", "Rate not found", uuid.toString());
 		assertErrorResponse(
-				handler.handleReservationGuestNotFound(
+				reservationsHandler.handleReservationGuestNotFound(
 						new com.swissotel.swissotel360.reservations.domain.exceptions.GuestNotFoundException(uuid)),
 				404, "GUEST_NOT_FOUND", "Guest not found", uuid.toString());
 		assertErrorResponse(
-				handler.handleReservationRoomTypeNotFound(
+				reservationsHandler.handleReservationRoomTypeNotFound(
 						new com.swissotel.swissotel360.reservations.domain.exceptions.RoomTypeNotFoundException(uuid)),
 				404, "ROOM_TYPE_NOT_FOUND", "Room type not found", uuid.toString());
-		assertErrorResponse(handler.handleReservationNotFound(new ReservationNotFoundException("SW26-ABC")),
+		assertErrorResponse(reservationsHandler.handleReservationNotFound(new ReservationNotFoundException("SW26-ABC")),
 				404, "RESERVATION_NOT_FOUND", "Reservation not found", "SW26-ABC");
-		assertErrorResponse(handler.handleStayNotFound(new StayNotFoundException(uuid)),
+		assertErrorResponse(staysHandler.handleStayNotFound(new StayNotFoundException(uuid)),
 				404, "STAY_NOT_FOUND", "Stay not found", uuid.toString());
-		assertErrorResponse(handler.handleStayReservationNotFound(new StayReservationNotFoundException("SW26-XYZ")),
+		assertErrorResponse(staysHandler.handleStayReservationNotFound(new StayReservationNotFoundException("SW26-XYZ")),
 				404, "RESERVATION_NOT_FOUND", "Reservation not found", "SW26-XYZ");
-		assertErrorResponse(handler.handleDigitalKeyNotFound(new DigitalKeyNotFoundException(12L)),
-				404, "DIGITAL_KEY_NOT_FOUND", "Digital key not found", "12");
-		assertErrorResponse(handler.handleServiceRequestNotFound(new ServiceRequestNotFoundException(uuid)),
+		assertErrorResponse(staysHandler.handleDigitalKeyNotFound(new DigitalKeyNotFoundException(uuid)),
+				404, "DIGITAL_KEY_NOT_FOUND", "Digital key not found", uuid.toString());
+		assertErrorResponse(serviceRequestsHandler.handleServiceRequestNotFound(new ServiceRequestNotFoundException(uuid)),
 				404, "SERVICE_REQUEST_NOT_FOUND", "Service request not found", uuid.toString());
-		assertErrorResponse(handler.handleServiceTypeNotFound(new ServiceTypeNotFoundException("SPA")),
+		assertErrorResponse(serviceRequestsHandler.handleServiceTypeNotFound(new ServiceTypeNotFoundException("SPA")),
 				404, "SERVICE_TYPE_NOT_FOUND", "Service type not found", "SPA");
-		assertErrorResponse(handler.handleServiceRequestStayNotFound(new ServiceRequestStayNotFoundException(uuid)),
+		assertErrorResponse(serviceRequestsHandler.handleServiceRequestStayNotFound(new ServiceRequestStayNotFoundException(uuid)),
 				404, "STAY_NOT_FOUND", "Stay not found", uuid.toString());
-		assertErrorResponse(handler.handleFolioNotFound(new FolioNotFoundException(uuid)),
+		assertErrorResponse(billingHandler.handleFolioNotFound(new FolioNotFoundException(uuid)),
 				404, "FOLIO_NOT_FOUND", "Folio not found", uuid.toString());
-		assertErrorResponse(handler.handlePaymentMethodNotFound(new PaymentMethodNotFoundException("CARD")),
+		assertErrorResponse(billingHandler.handlePaymentMethodNotFound(new PaymentMethodNotFoundException("CARD")),
 				404, "PAYMENT_METHOD_NOT_FOUND", "Payment method not found", "CARD");
-		assertErrorResponse(handler.handlePaymentNotFound(new PaymentNotFoundException(uuid)),
+		assertErrorResponse(billingHandler.handlePaymentNotFound(new PaymentNotFoundException(uuid)),
 				404, "PAYMENT_NOT_FOUND", "Payment not found", uuid.toString());
-		assertErrorResponse(handler.handleChargeServiceRequestNotFound(new ChargeServiceRequestNotFoundException(uuid)),
+		assertErrorResponse(billingHandler.handleChargeServiceRequestNotFound(new ChargeServiceRequestNotFoundException(uuid)),
 				404, "SERVICE_REQUEST_NOT_FOUND", "Service request not found", uuid.toString());
-		assertErrorResponse(handler.handleBillingStayNotFound(new BillingStayNotFoundException(uuid)),
+		assertErrorResponse(billingHandler.handleBillingStayNotFound(new BillingStayNotFoundException(uuid)),
 				404, "STAY_NOT_FOUND", "Stay not found", uuid.toString());
 	}
 
@@ -116,92 +128,92 @@ class GlobalExceptionHandlerTest {
 		var uuid = UUID.randomUUID();
 		var reservationId = ReservationId.newId();
 
-		assertErrorResponse(handler.handleDuplicateGuest(new DuplicateGuestException(1L, "12345678")),
+		assertErrorResponse(guestsHandler.handleDuplicateGuest(new DuplicateGuestException("DNI", "12345678")),
 				409, "DUPLICATE_DOCUMENT", "A guest with this document already exists", "12345678");
-		assertErrorResponse(handler.handleUserAlreadyLinked(new UserAlreadyLinkedException()),
+		assertErrorResponse(guestsHandler.handleUserAlreadyLinked(new UserAlreadyLinkedException()),
 				409, "USER_ALREADY_LINKED", "User already linked to a guest", "already linked");
-		assertErrorResponse(handler.handleDuplicateRoomType(new DuplicateRoomTypeException("Suite")),
+		assertErrorResponse(roomsHandler.handleDuplicateRoomType(new DuplicateRoomTypeException("Suite")),
 				409, "DUPLICATE_ROOM_TYPE", "Room type already exists", "Suite");
-		assertErrorResponse(handler.handleDuplicateRoomNumber(new DuplicateRoomNumberException("401")),
+		assertErrorResponse(roomsHandler.handleDuplicateRoomNumber(new DuplicateRoomNumberException("401")),
 				409, "DUPLICATE_ROOM_NUMBER", "Room number already exists", "401");
 		assertErrorResponse(
-				handler.handleRateOverlap(
+				roomsHandler.handleRateOverlap(
 						new RateOverlapException(List.of(LocalDate.of(2026, 11, 10), LocalDate.of(2026, 11, 11)))),
 				409, "RATE_OVERLAP", "Rate overlaps an existing period", "2026-11-10, 2026-11-11");
 		assertErrorResponse(
-				handler.handleInvalidRoomStatus(
+				roomsHandler.handleInvalidRoomStatus(
 						new InvalidRoomStatusTransitionException(RoomStatus.AVAILABLE, RoomStatus.OUT_OF_SERVICE)),
 				409, "INVALID_STATUS_TRANSITION", "Invalid room status transition", "AVAILABLE to OUT_OF_SERVICE");
-		assertErrorResponse(handler.handleRoomTypeInUse(new RoomTypeInUseException(uuid)),
+		assertErrorResponse(roomsHandler.handleRoomTypeInUse(new RoomTypeInUseException(uuid)),
 				409, "ROOM_TYPE_IN_USE", "Room type is in use", uuid.toString());
-		assertErrorResponse(handler.handleRoomInUse(new RoomInUseException(uuid)),
+		assertErrorResponse(roomsHandler.handleRoomInUse(new RoomInUseException(uuid)),
 				409, "ROOM_IN_USE", "Room is in use", uuid.toString());
-		assertErrorResponse(handler.handleOccupiedRoomTypeChange(new OccupiedRoomTypeChangeException(uuid)),
+		assertErrorResponse(roomsHandler.handleOccupiedRoomTypeChange(new OccupiedRoomTypeChangeException(uuid)),
 				409, "OCCUPIED_ROOM_TYPE_CHANGE", "Room type cannot change while occupied", uuid.toString());
-		assertErrorResponse(handler.handleRateCannotBeDeleted(new RateCannotBeDeletedException(7L)),
-				409, "RATE_CANNOT_BE_DELETED", "Rate cannot be deleted", "7");
-		assertErrorResponse(handler.handleNoAvailability(new NoAvailabilityException(new RoomTypeId(3L))),
+		assertErrorResponse(roomsHandler.handleRateCannotBeDeleted(new RateCannotBeDeletedException(uuid)),
+				409, "RATE_CANNOT_BE_DELETED", "Rate cannot be deleted", uuid.toString());
+		assertErrorResponse(reservationsHandler.handleNoAvailability(new NoAvailabilityException(new RoomTypeId(3L))),
 				409, "NO_AVAILABILITY", "No room availability", "3");
-		assertErrorResponse(handler.handleDuplicateReservation(new DuplicateReservationException()),
+		assertErrorResponse(reservationsHandler.handleDuplicateReservation(new DuplicateReservationException()),
 				409, "DUPLICATE_RESERVATION", "Duplicate reservation", "active reservation");
 		assertErrorResponse(
-				handler.handleInvalidReservationTransition(new InvalidReservationTransitionException(
+				reservationsHandler.handleInvalidReservationTransition(new InvalidReservationTransitionException(
 						reservationId, ReservationStatus.PENDING, ReservationStatus.COMPLETED)),
 				409, "INVALID_STATUS_TRANSITION", "Invalid reservation status transition", "pending to completed");
 		assertErrorResponse(
-				handler.handleReservationNotModifiable(
+				reservationsHandler.handleReservationNotModifiable(
 						new ReservationNotModifiableException(reservationId, ReservationStatus.CANCELLED)),
 				409, "RESERVATION_NOT_MODIFIABLE", "Reservation is not modifiable", reservationId.value().toString());
-		assertErrorResponse(handler.handleGuestProfileRequired(new GuestProfileRequiredException()),
+		assertErrorResponse(reservationsHandler.handleGuestProfileRequired(new GuestProfileRequiredException()),
 				409, "GUEST_PROFILE_REQUIRED", "Guest profile required", "guest profile");
 		assertErrorResponse(
-				handler.handleReservationNotEligibleForCheckIn(
+				staysHandler.handleReservationNotEligibleForCheckIn(
 						new ReservationNotEligibleForCheckInException("Reservation is cancelled")),
 				409, "RESERVATION_NOT_ELIGIBLE_FOR_CHECK_IN",
 				"Reservation not eligible for check-in", "Reservation is cancelled");
-		assertErrorResponse(handler.handleRoomNotAvailable(new RoomNotAvailableException("Room is cleaning")),
+		assertErrorResponse(staysHandler.handleRoomNotAvailable(new RoomNotAvailableException("Room is cleaning")),
 				409, "ROOM_NOT_AVAILABLE", "Room not available", "Room is cleaning");
-		assertErrorResponse(handler.handleStayNotActiveForRequest(new StayNotActiveForRequestException(uuid)),
+		assertErrorResponse(serviceRequestsHandler.handleStayNotActiveForRequest(new StayNotActiveForRequestException(uuid)),
 				409, "STAY_NOT_ACTIVE", "Stay is not active", uuid.toString());
 		assertErrorResponse(
-				handler.handleInvalidServiceRequestTransition(
+				serviceRequestsHandler.handleInvalidServiceRequestTransition(
 						new InvalidServiceRequestTransitionException("completed", "in_progress")),
 				409, "INVALID_SERVICE_REQUEST_TRANSITION",
 				"Invalid service request transition", "completed -> in_progress");
-		assertErrorResponse(handler.handleStayAlreadyClosed(new StayAlreadyClosedException(uuid)),
+		assertErrorResponse(staysHandler.handleStayAlreadyClosed(new StayAlreadyClosedException(uuid)),
 				409, "STAY_ALREADY_CLOSED", "Stay is already closed", uuid.toString());
-		assertErrorResponse(handler.handleFolioClosed(new FolioClosedException()),
+		assertErrorResponse(billingHandler.handleFolioClosed(new FolioClosedException()),
 				409, "FOLIO_CLOSED", "Folio is closed", "closed");
-		assertErrorResponse(handler.handleFolioAlreadyPaid(new FolioAlreadyPaidException()),
+		assertErrorResponse(billingHandler.handleFolioAlreadyPaid(new FolioAlreadyPaidException()),
 				409, "FOLIO_ALREADY_PAID", "Folio is already paid", "payment");
-		assertErrorResponse(handler.handlePaymentNotProcessed(new PaymentNotProcessedException()),
+		assertErrorResponse(billingHandler.handlePaymentNotProcessed(new PaymentNotProcessedException()),
 				409, "PAYMENT_NOT_PROCESSED", "Payment is not processed", "not processed");
-		assertErrorResponse(handler.handleInvoiceAlreadyIssued(new InvoiceAlreadyIssuedException()),
+		assertErrorResponse(billingHandler.handleInvoiceAlreadyIssued(new InvoiceAlreadyIssuedException()),
 				409, "INVOICE_ALREADY_ISSUED", "Invoice already issued", "already issued");
 	}
 
 	@Test
 	void mapsUnprocessableContentExceptionsTo422ErrorResource() {
-		assertErrorResponse(handler.handleRateNotFound(new RateNotFoundException(LocalDate.of(2026, 12, 24))),
+		assertErrorResponse(roomsHandler.handleRateNotFound(new RateNotFoundException(LocalDate.of(2026, 12, 24))),
 				422, "RATE_NOT_FOUND", "Rate not found", "2026-12-24");
 		assertErrorResponse(
-				handler.handleReservationRateNotFound(
+				reservationsHandler.handleReservationRateNotFound(
 						new com.swissotel.swissotel360.reservations.domain.exceptions.RateNotFoundException(
 								LocalDate.of(2026, 12, 25))),
 				422, "RATE_NOT_FOUND", "Rate not found", "2026-12-25");
-		assertErrorResponse(handler.handleGuestDocumentMismatch(new GuestDocumentMismatchException()),
+		assertErrorResponse(staysHandler.handleGuestDocumentMismatch(new GuestDocumentMismatchException()),
 				422, "GUEST_DOCUMENT_MISMATCH", "Guest document does not match reservation", "does not match");
-		assertErrorResponse(handler.handlePaymentAmountMismatch(new PaymentAmountMismatchException()),
+		assertErrorResponse(billingHandler.handlePaymentAmountMismatch(new PaymentAmountMismatchException()),
 				422, "PAYMENT_AMOUNT_MISMATCH", "Payment amount mismatch", "folio total");
 	}
 
 	@Test
 	void mapsBadRequestAndForbiddenExceptionsToErrorResourceWithoutInternalLeaks() {
 		assertErrorResponse(
-				handler.handleInvalidDocumentNumber(new InvalidDocumentNumberException("Document must have 8 digits")),
+				guestsHandler.handleInvalidDocumentNumber(new InvalidDocumentNumberException("Document must have 8 digits")),
 				400, "INVALID_DOCUMENT_NUMBER", "Invalid document number", "Document must have 8 digits");
 		assertErrorResponse(
-				handler.handleInvalidStayPeriod(new InvalidStayPeriodException("Check-out must be after check-in")),
+				reservationsHandler.handleInvalidStayPeriod(new InvalidStayPeriodException("Check-out must be after check-in")),
 				400, "INVALID_STAY_PERIOD", "Invalid stay period", "Check-out must be after check-in");
 
 		var forbidden = handler.handleAccessDenied(

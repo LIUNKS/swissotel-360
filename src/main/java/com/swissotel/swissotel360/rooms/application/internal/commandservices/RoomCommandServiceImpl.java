@@ -48,14 +48,14 @@ public class RoomCommandServiceImpl implements RoomCommandService {
 	}
 
 	public Room markOccupied(MarkRoomOccupiedCommand command) {
-		var id = command.publicId();
-		var room = rooms.findByPublicId(id).orElseThrow(() -> new RoomNotFoundException(id));
+		var id = command.roomId();
+		var room = rooms.findById(id).orElseThrow(() -> new RoomNotFoundException(id));
 		return rooms.save(room.markOccupied());
 	}
 
 	public Room markCheckedOut(MarkRoomCheckedOutCommand command) {
-		var id = command.publicId();
-		var room = rooms.findByPublicId(id).orElseThrow(() -> new RoomNotFoundException(id));
+		var id = command.roomId();
+		var room = rooms.findById(id).orElseThrow(() -> new RoomNotFoundException(id));
 		return rooms.save(room.markCheckedOut());
 	}
 

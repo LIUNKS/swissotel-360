@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public final class Folio extends AbstractDomainAggregateRoot<Folio> {
 	private final FolioId id;
@@ -40,7 +41,7 @@ public final class Folio extends AbstractDomainAggregateRoot<Folio> {
 	public Charge addCharge(String concept, BigDecimal amount, Long serviceRequestId, Instant now) {
 		if (status != FolioStatus.OPEN)
 			throw new FolioClosedException();
-		var charge = new Charge(null, serviceRequestId, concept, amount, now);
+		var charge = new Charge(null, UUID.randomUUID(), serviceRequestId, concept, amount, now);
 		charges.add(charge);
 		return charge;
 	}

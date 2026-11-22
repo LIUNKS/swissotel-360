@@ -8,7 +8,7 @@ public final class CreateGuestCommandAssembler {
 	}
 
 	public static CreateGuestCommand toCommand(CreateGuestResource resource) {
-		return new CreateGuestCommand(resource.documentTypeId(), resource.documentNumber(), resource.firstName(),
+		return new CreateGuestCommand(resource.documentTypeCode(), resource.documentNumber(), resource.firstName(),
 				resource.lastName(), resource.email(), resource.phone(), resource.countryOfOrigin());
 	}
 }

@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "digital_keys")
@@ -13,6 +14,8 @@ public class DigitalKeyPersistenceEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	@Column(name = "public_id", nullable = false, unique = true, updatable = false)
+	private UUID publicId;
 	@Column(name = "stay_id", nullable = false, updatable = false)
 	private Long stayId;
 	@Column(name = "access_code", nullable = false, updatable = false, length = 64)

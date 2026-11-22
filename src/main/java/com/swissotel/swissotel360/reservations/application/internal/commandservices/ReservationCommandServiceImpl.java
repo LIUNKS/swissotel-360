@@ -69,7 +69,7 @@ public final class ReservationCommandServiceImpl implements ReservationCommandSe
 				.orElseThrow(() -> new RoomTypeNotFoundException(command.roomTypePublicId()));
 		var period = new StayPeriod(command.checkInDate(), command.checkOutDate());
 		bookingPolicy.validate(period, LocalDate.now(clock));
-		rooms.lockInventory(type.id());
+		reservations.lockRoomType(type.id());
 		assertCapacity(type, period, Optional.empty());
 		var quote = rooms.quote(type.id(), period);
 		var saved = createAndSave(guest.id(), type.id(), period, command.paymentType(), quote.total(), actor.userId());
@@ -186,6 +186,6 @@ public final class ReservationCommandServiceImpl implements ReservationCommandSe
 
 	private void lockTypesInOrder(RoomTypeId previous, RoomTypeId next) {
 		List.of(previous, next).stream().distinct().sorted(Comparator.comparing(RoomTypeId::value))
-				.forEach(rooms::lockInventory);
+				.forEach(reservations::lockRoomType);
 	}
 }

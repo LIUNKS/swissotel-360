@@ -53,26 +53,26 @@ public class RateController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(RoomsResourceAssembler.toResource(rate));
 	}
 
-	@PatchMapping("/{rateId}/close")
+	@PatchMapping("/{ratePublicId}/close")
 	@PreAuthorize("hasAuthority('rates.manage')")
 	@Operation(summary = "Close an open rate", security = @SecurityRequirement(name = "bearerAuth"))
 	@ApiResponses({ @ApiResponse(responseCode = "200", description = "Rate closed"),
 			@ApiResponse(responseCode = "400", description = "Invalid end date"),
 			@ApiResponse(responseCode = "404", description = "Rate not found") })
-	public ResponseEntity<RateResource> close(@PathVariable UUID roomTypePublicId, @PathVariable Long rateId,
+	public ResponseEntity<RateResource> close(@PathVariable UUID roomTypePublicId, @PathVariable UUID ratePublicId,
 			@Valid @RequestBody CloseRateResource r) {
 		return ResponseEntity.ok(RoomsResourceAssembler
-				.toResource(commands.close(RateCommandAssembler.toCommand(roomTypePublicId, rateId, r))));
+				.toResource(commands.close(RateCommandAssembler.toCommand(roomTypePublicId, ratePublicId, r))));
 	}
 
-	@DeleteMapping("/{rateId}")
+	@DeleteMapping("/{ratePublicId}")
 	@PreAuthorize("hasAuthority('rates.manage')")
 	@Operation(summary = "Delete a future rate", security = @SecurityRequirement(name = "bearerAuth"))
 	@ApiResponses({ @ApiResponse(responseCode = "204", description = "Rate deleted"),
 			@ApiResponse(responseCode = "404", description = "Rate not found"),
 			@ApiResponse(responseCode = "409", description = "Effective rates cannot be deleted") })
-	public ResponseEntity<Void> delete(@PathVariable UUID roomTypePublicId, @PathVariable Long rateId) {
-		commands.delete(RateCommandAssembler.toDeleteCommand(roomTypePublicId, rateId));
+	public ResponseEntity<Void> delete(@PathVariable UUID roomTypePublicId, @PathVariable UUID ratePublicId) {
+		commands.delete(RateCommandAssembler.toDeleteCommand(roomTypePublicId, ratePublicId));
 		return ResponseEntity.noContent().build();
 	}
 }

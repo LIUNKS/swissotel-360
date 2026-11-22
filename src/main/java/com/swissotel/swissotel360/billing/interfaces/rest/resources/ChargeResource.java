@@ -6,6 +6,6 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Schema(description = "Folio line item")
-public record ChargeResource(Long chargeId, String concept, BigDecimal amount, Instant chargedAt,
+public record ChargeResource(UUID chargeId, String concept, BigDecimal amount, Instant chargedAt,
 		UUID serviceRequestId) {
 }

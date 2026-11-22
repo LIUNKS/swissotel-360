@@ -54,7 +54,7 @@ public class WebSecurityConfiguration {
 	 */
 	@Bean
 	public BearerAuthorizationRequestFilter authorizationRequestFilter() {
-		return new BearerAuthorizationRequestFilter(tokenService, userDetailsService);
+		return new BearerAuthorizationRequestFilter(tokenService);
 	}
 
 	/**

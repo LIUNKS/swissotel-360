@@ -7,5 +7,7 @@ import java.util.Optional;
 public interface DocumentTypeRepository {
 	Optional<DocumentType> findById(Long id);
 
+	Optional<DocumentType> findByCode(String code);
+
 	List<DocumentType> findAll();
 }

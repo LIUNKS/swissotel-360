@@ -37,11 +37,6 @@ public class RoomTypeRepositoryImpl implements RoomTypeRepository {
 		return repository.findById(id).map(RoomsPersistenceAssembler::toDomain);
 	}
 
-	public void lockInventory(Long id) {
-		repository.lockInventoryById(id)
-				.orElseThrow(() -> new IllegalStateException("Room type does not exist: " + id));
-	}
-
 	public List<RoomType> findAll() {
 		return repository.findAll().stream().map(RoomsPersistenceAssembler::toDomain).toList();
 	}

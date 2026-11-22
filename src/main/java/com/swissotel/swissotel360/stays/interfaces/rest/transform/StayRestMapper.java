@@ -36,11 +36,11 @@ public final class StayRestMapper {
 	}
 
 	public static DigitalKeyResource toIssued(DigitalKey k) {
-		return new DigitalKeyResource(k.id(), k.accessCode(), k.status().code());
+		return new DigitalKeyResource(k.publicId(), k.accessCode(), k.status().code());
 	}
 
 	public static DigitalKeyResource toRevoked(DigitalKey k) {
-		return new DigitalKeyResource(k.id(), null, k.status().code());
+		return new DigitalKeyResource(k.publicId(), null, k.status().code());
 	}
 
 	public static CheckOutCommand checkOut(UUID id) {

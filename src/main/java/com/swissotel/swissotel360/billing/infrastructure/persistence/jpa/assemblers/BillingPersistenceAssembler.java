@@ -12,7 +12,8 @@ public final class BillingPersistenceAssembler {
 	}
 
 	public static Charge toDomain(ChargePersistenceEntity e) {
-		return new Charge(e.getId(), e.getServiceRequestId(), e.getConcept(), e.getAmount(), e.getChargedAt());
+		return new Charge(e.getId(), e.getPublicId(), e.getServiceRequestId(), e.getConcept(), e.getAmount(),
+				e.getChargedAt());
 	}
 
 	public static Folio toDomain(FolioPersistenceEntity e, List<ChargePersistenceEntity> charges) {
@@ -30,6 +31,7 @@ public final class BillingPersistenceAssembler {
 
 	public static ChargePersistenceEntity toEntity(Charge c, Long folioId) {
 		var e = new ChargePersistenceEntity();
+		e.setPublicId(c.publicId());
 		e.setFolioId(folioId);
 		e.setServiceRequestId(c.serviceRequestId());
 		e.setConcept(c.concept());

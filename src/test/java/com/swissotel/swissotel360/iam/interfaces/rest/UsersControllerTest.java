@@ -4,7 +4,7 @@ import com.swissotel.swissotel360.iam.application.commandservices.UserCommandSer
 import com.swissotel.swissotel360.iam.application.queryservices.UserQueryService;
 import com.swissotel.swissotel360.iam.domain.model.aggregates.User;
 import com.swissotel.swissotel360.iam.domain.model.entities.Role;
-import com.swissotel.swissotel360.iam.domain.model.queries.GetUserByIdQuery;
+import com.swissotel.swissotel360.iam.domain.model.queries.GetUserByPublicIdQuery;
 import com.swissotel.swissotel360.iam.domain.model.valueobjects.Roles;
 import com.swissotel.swissotel360.iam.interfaces.rest.resources.UserResource;
 import com.swissotel.swissotel360.shared.interfaces.rest.resources.ErrorResource;
@@ -48,9 +48,10 @@ class UsersControllerTest {
 
 	@Test
 	void getUserByIdReturns404WithErrorResourceWhenUserDoesNotExist() {
-		when(userQueryService.handle(new GetUserByIdQuery(999L))).thenReturn(Optional.empty());
+		var missingPublicId = UUID.randomUUID();
+		when(userQueryService.handle(new GetUserByPublicIdQuery(missingPublicId))).thenReturn(Optional.empty());
 
-		var response = controller.getUserById(999L);
+		var response = controller.getUserById(missingPublicId);
 
 		assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
 		var body = assertInstanceOf(ErrorResource.class, response.getBody());
@@ -71,13 +72,12 @@ class UsersControllerTest {
 				new Role(2L, Roles.ROLE_MANAGER),
 				"active",
 				null);
-		when(userQueryService.handle(new GetUserByIdQuery(5L))).thenReturn(Optional.of(user));
+		when(userQueryService.handle(new GetUserByPublicIdQuery(publicId))).thenReturn(Optional.of(user));
 
-		var response = controller.getUserById(5L);
+		var response = controller.getUserById(publicId);
 
 		assertEquals(HttpStatus.OK, response.getStatusCode());
 		var body = assertInstanceOf(UserResource.class, response.getBody());
-		assertEquals(5L, body.id());
 		assertEquals(publicId, body.publicId());
 		assertEquals("jane.doe@swissotel.com", body.email());
 		assertEquals("ROLE_MANAGER", body.role());

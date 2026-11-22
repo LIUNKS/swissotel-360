@@ -1,17 +1,17 @@
 package com.swissotel.swissotel360.guests.domain.exceptions;
 
 public class DuplicateGuestException extends RuntimeException {
-	private final Long documentTypeId;
+	private final String documentTypeCode;
 	private final String documentNumber;
 
-	public DuplicateGuestException(Long documentTypeId, String documentNumber) {
+	public DuplicateGuestException(String documentTypeCode, String documentNumber) {
 		super("A guest with this document already exists");
-		this.documentTypeId = documentTypeId;
+		this.documentTypeCode = documentTypeCode;
 		this.documentNumber = documentNumber;
 	}
 
-	public Long getDocumentTypeId() {
-		return documentTypeId;
+	public String getDocumentTypeCode() {
+		return documentTypeCode;
 	}
 
 	public String getDocumentNumber() {
