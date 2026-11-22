@@ -24,7 +24,8 @@ import static org.junit.jupiter.api.Assertions.*;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
 		"spring.flyway.enabled=false",
 		"spring.jpa.hibernate.ddl-auto=none",
-		"reservations.expiration-job.enabled=false" })
+		"reservations.expiration-job.enabled=false",
+		"swissotel.messaging.rabbitmq.enabled=false" })
 class RbacSecurityIntegrationTest {
 
 	private static final String ADMIN_EMAIL = "admin@swissotel.com";
