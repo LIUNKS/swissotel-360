@@ -1,0 +1,49 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: swissotel-postgres
+    ports:
+      - "${LOCAL_DB_PORT:-5433}:5432"
+    environment:
+      POSTGRES_DB: ${LOCAL_DB_NAME:-swissotel360}
+      POSTGRES_USER: ${LOCAL_DB_USER:-swissotel}
+      POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD:-swissotel_dev_password}
+    volumes:
+      - ./infra/postgres/init-schemas.sql:/docker-entrypoint-initdb.d/01-init-schemas.sql:ro
+      - swissotel-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${LOCAL_DB_USER:-swissotel} -d ${LOCAL_DB_NAME:-swissotel360}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - swissotel-net
+
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    container_name: swissotel-rabbitmq
+    ports:
+      - "${RABBITMQ_PORT:-5672}:5672"
+      - "${RABBITMQ_MGMT_PORT:-15672}:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-swissotel}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-swissotel_dev_password}
+    volumes:
+      - swissotel-rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    networks:
+      - swissotel-net
+
+volumes:
+  swissotel-pgdata:
+  swissotel-rabbitmq-data:
+
+networks:
+  swissotel-net:
+    driver: bridge
