@@ -21,6 +21,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -31,108 +32,114 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class ApiGatewayIntegrationTest {
 
+	private static HttpServer iamStub;
+	private static HttpServer guestsStub;
+	private static HttpServer roomsStub;
+	private static HttpServer reservationsStub;
+	private static HttpServer operationsStub;
 	private static HttpServer billingStub;
-	private static HttpServer monolithStub;
-	private static int billingPort;
-	private static int monolithPort;
 
+	private static final List<RecordedRequest> iamRequests = new CopyOnWriteArrayList<>();
+	private static final List<RecordedRequest> guestsRequests = new CopyOnWriteArrayList<>();
+	private static final List<RecordedRequest> roomsRequests = new CopyOnWriteArrayList<>();
+	private static final List<RecordedRequest> reservationsRequests = new CopyOnWriteArrayList<>();
+	private static final List<RecordedRequest> operationsRequests = new CopyOnWriteArrayList<>();
 	private static final List<RecordedRequest> billingRequests = new CopyOnWriteArrayList<>();
-	private static final List<RecordedRequest> monolithRequests = new CopyOnWriteArrayList<>();
+
+	private static List<List<RecordedRequest>> allLogs() {
+		return List.of(iamRequests, guestsRequests, roomsRequests, reservationsRequests, operationsRequests,
+				billingRequests);
+	}
 
 	@BeforeAll
 	static void startStubs() throws IOException {
+		iamStub = startStub("iam", iamRequests);
+		guestsStub = startStub("guests", guestsRequests);
+		roomsStub = startStub("rooms", roomsRequests);
+		reservationsStub = startStub("reservations", reservationsRequests);
+		operationsStub = startStub("operations", operationsRequests);
 		billingStub = startStub("billing", billingRequests);
-		monolithStub = startStub("monolith", monolithRequests);
-		billingPort = billingStub.getAddress().getPort();
-		monolithPort = monolithStub.getAddress().getPort();
 	}
 
 	@AfterAll
 	static void stopStubs() {
-		if (billingStub != null) {
-			billingStub.stop(0);
-		}
-		if (monolithStub != null) {
-			monolithStub.stop(0);
+		for (var stub : List.of(iamStub, guestsStub, roomsStub, reservationsStub, operationsStub, billingStub)) {
+			if (stub != null) {
+				stub.stop(0);
+			}
 		}
 	}
 
 	@BeforeEach
 	void clearRecordedRequests() {
-		billingRequests.clear();
-		monolithRequests.clear();
+		allLogs().forEach(List::clear);
 	}
 
 	@DynamicPropertySource
 	static void overrideDownstreamUrls(DynamicPropertyRegistry registry) {
-		registry.add("gateway.routes.billing-service-url", () -> "http://localhost:" + billingPort);
-		registry.add("gateway.routes.monolith-url", () -> "http://localhost:" + monolithPort);
+		registry.add("gateway.routes.iam-service-url", () -> "http://localhost:" + iamStub.getAddress().getPort());
+		registry.add("gateway.routes.guests-service-url", () -> "http://localhost:" + guestsStub.getAddress().getPort());
+		registry.add("gateway.routes.rooms-service-url", () -> "http://localhost:" + roomsStub.getAddress().getPort());
+		registry.add("gateway.routes.reservations-service-url",
+				() -> "http://localhost:" + reservationsStub.getAddress().getPort());
+		registry.add("gateway.routes.operations-service-url",
+				() -> "http://localhost:" + operationsStub.getAddress().getPort());
+		registry.add("gateway.routes.billing-service-url",
+				() -> "http://localhost:" + billingStub.getAddress().getPort());
 	}
 
 	@Test
-	void routesBillingPathsToBillingServiceAndPreservesAuthHeaders(@LocalServerPort int port) throws Exception {
+	void routesAllSixServicePathGroupsAndPreservesAuthHeaders(@LocalServerPort int port) throws Exception {
 		var uuid = UUID.randomUUID();
-		var paths = List.of(
-				"/api/v1/folios?stayId=" + uuid,
-				"/api/v1/folios/" + uuid + "/summary",
-				"/api/v1/payment-methods",
-				"/api/v1/payments",
-				"/api/v1/invoices");
+		var expectedRoutes = Map.of(
+				"iam", List.of("/api/v1/authentication/me", "/api/v1/users/" + uuid),
+				"guests", List.of("/api/v1/guests", "/api/v1/document-types"),
+				"rooms", List.of("/api/v1/rooms", "/api/v1/room-types/" + uuid + "/rates",
+						"/api/v1/availability?checkIn=2026-11-01&checkOut=2026-11-03"),
+				"reservations", List.of("/api/v1/reservations", "/api/v1/reservations/" + uuid),
+				"operations", List.of("/api/v1/stays", "/api/v1/digital-keys", "/api/v1/service-requests",
+						"/api/v1/service-types"),
+				"billing", List.of("/api/v1/folios?stayId=" + uuid, "/api/v1/payment-methods",
+						"/api/v1/payments", "/api/v1/invoices"));
 
 		try (var client = HttpClient.newHttpClient()) {
-			for (var path : paths) {
-				var req = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
-						.header(HttpHeaders.AUTHORIZATION, "Bearer test-jwt")
-						.header(HttpHeaders.COOKIE, "token=cookie-jwt")
-						.GET()
-						.build();
-				var resp = client.send(req, HttpResponse.BodyHandlers.ofString());
-				assertEquals(200, resp.statusCode(), "Expected 200 for " + path + ": " + resp.body());
-				assertEquals("billing", JsonPath.parse(resp.body()).read("$.service", String.class));
+			for (var entry : expectedRoutes.entrySet()) {
+				String service = entry.getKey();
+				for (var path : entry.getValue()) {
+					var req = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
+							.header(HttpHeaders.AUTHORIZATION, "Bearer test-jwt")
+							.header(HttpHeaders.COOKIE, "token=cookie-jwt")
+							.GET()
+							.build();
+					var resp = client.send(req, HttpResponse.BodyHandlers.ofString());
+					assertEquals(200, resp.statusCode(), "Expected 200 for " + path + ": " + resp.body());
+					assertEquals(service, JsonPath.parse(resp.body()).read("$.service", String.class));
+				}
 			}
 		}
 
-		assertEquals(paths.size(), billingRequests.size());
-		assertEquals(0, monolithRequests.size());
-		for (var recorded : billingRequests) {
-			assertEquals("Bearer test-jwt", recorded.authorization());
-			assertTrue(recorded.cookie() != null && recorded.cookie().contains("token=cookie-jwt"));
-		}
-	}
+		assertEquals(2, iamRequests.size());
+		assertEquals(2, guestsRequests.size());
+		assertEquals(3, roomsRequests.size());
+		assertEquals(2, reservationsRequests.size());
+		assertEquals(4, operationsRequests.size());
+		assertEquals(4, billingRequests.size());
 
-	@Test
-	void routesOtherBoundedContextsToMonolith(@LocalServerPort int port) throws Exception {
-		var uuid = UUID.randomUUID();
-		var paths = List.of(
-				"/api/v1/authentication/me",
-				"/api/v1/users/" + uuid,
-				"/api/v1/guests",
-				"/api/v1/document-types",
-				"/api/v1/rooms",
-				"/api/v1/room-types/" + uuid + "/rates",
-				"/api/v1/availability?checkIn=2026-11-01&checkOut=2026-11-03",
-				"/api/v1/reservations",
-				"/api/v1/stays",
-				"/api/v1/digital-keys",
-				"/api/v1/service-requests",
-				"/api/v1/service-types");
-
-		try (var client = HttpClient.newHttpClient()) {
-			for (var path : paths) {
-				var req = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path)).GET().build();
-				var resp = client.send(req, HttpResponse.BodyHandlers.ofString());
-				assertEquals(200, resp.statusCode(), "Expected 200 for " + path + ": " + resp.body());
-				assertEquals("monolith", JsonPath.parse(resp.body()).read("$.service", String.class));
+		for (var log : allLogs()) {
+			for (var recorded : log) {
+				assertEquals("Bearer test-jwt", recorded.authorization());
+				assertTrue(recorded.cookie() != null && recorded.cookie().contains("token=cookie-jwt"));
 			}
 		}
-
-		assertEquals(paths.size(), monolithRequests.size());
-		assertEquals(0, billingRequests.size());
 	}
 
 	@Test
-	void blocksInternalEndpointsAtGatewayEdgeWithoutCallingDownstream(@LocalServerPort int port) throws Exception {
+	void blocksInternalEndpointsAtGatewayEdgeWithoutCallingAnyDownstream(@LocalServerPort int port) throws Exception {
 		var blockedPaths = List.of(
+				"/internal/users/1",
+				"/internal/guests/1",
+				"/internal/rooms/1",
+				"/internal/reservations/by-code/SW26-123",
 				"/internal/stays/1",
 				"/internal/service-requests/1",
 				"/internal",
@@ -148,26 +155,25 @@ class ApiGatewayIntegrationTest {
 			}
 		}
 
-		assertEquals(0, billingRequests.size());
-		assertEquals(0, monolithRequests.size());
+		for (var log : allLogs()) {
+			assertEquals(0, log.size());
+		}
 	}
 
 	@Test
-	void rewritesOpenApiDocsAggregatesSwaggerConfigAndExposesHealth(@LocalServerPort int port) throws Exception {
-		try (var client = HttpClient.newHttpClient()) {
-			var billingDocs = client.send(
-					HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/v3/api-docs/billing")).GET().build(),
-					HttpResponse.BodyHandlers.ofString());
-			assertEquals(200, billingDocs.statusCode());
-			assertEquals("3.0.1", JsonPath.parse(billingDocs.body()).read("$.openapi", String.class));
-			assertEquals("billing", JsonPath.parse(billingDocs.body()).read("$.info.title", String.class));
+	void rewritesAllSixOpenApiDocsAggregatesSwaggerConfigAndExposesHealth(@LocalServerPort int port) throws Exception {
+		var services = List.of("iam", "guests", "rooms", "reservations", "operations", "billing");
 
-			var monolithDocs = client.send(
-					HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/v3/api-docs/monolith")).GET().build(),
-					HttpResponse.BodyHandlers.ofString());
-			assertEquals(200, monolithDocs.statusCode());
-			assertEquals("3.0.1", JsonPath.parse(monolithDocs.body()).read("$.openapi", String.class));
-			assertEquals("monolith", JsonPath.parse(monolithDocs.body()).read("$.info.title", String.class));
+		try (var client = HttpClient.newHttpClient()) {
+			for (var service : services) {
+				var docs = client.send(
+						HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/v3/api-docs/" + service))
+								.GET().build(),
+						HttpResponse.BodyHandlers.ofString());
+				assertEquals(200, docs.statusCode(), docs.body());
+				assertEquals("3.0.1", JsonPath.parse(docs.body()).read("$.openapi", String.class));
+				assertEquals(service, JsonPath.parse(docs.body()).read("$.info.title", String.class));
+			}
 
 			var swaggerConfig = client.send(
 					HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/v3/api-docs/swagger-config"))
@@ -175,8 +181,10 @@ class ApiGatewayIntegrationTest {
 					HttpResponse.BodyHandlers.ofString());
 			assertEquals(200, swaggerConfig.statusCode(), swaggerConfig.body());
 			List<String> urls = JsonPath.parse(swaggerConfig.body()).read("$.urls[*].url");
-			assertTrue(urls.contains("/v3/api-docs/monolith"), swaggerConfig.body());
-			assertTrue(urls.contains("/v3/api-docs/billing"), swaggerConfig.body());
+			assertEquals(6, urls.size());
+			for (var service : services) {
+				assertTrue(urls.contains("/v3/api-docs/" + service), swaggerConfig.body());
+			}
 
 			var health = client.send(
 					HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/actuator/health")).GET().build(),
@@ -185,10 +193,10 @@ class ApiGatewayIntegrationTest {
 			assertEquals("UP", JsonPath.parse(health.body()).read("$.status", String.class));
 		}
 
-		assertEquals(1, billingRequests.size());
-		assertEquals("/v3/api-docs", billingRequests.getFirst().path());
-		assertEquals(1, monolithRequests.size());
-		assertEquals("/v3/api-docs", monolithRequests.getFirst().path());
+		for (var log : allLogs()) {
+			assertEquals(1, log.size());
+			assertEquals("/v3/api-docs", log.getFirst().path());
+		}
 	}
 
 	@Test
@@ -237,7 +245,6 @@ class ApiGatewayIntegrationTest {
 
 			var headers = exchange.getResponseHeaders();
 			headers.add(HttpHeaders.CONTENT_TYPE, "application/json");
-			// Simulate downstream CORS headers so gateway RemoveResponseHeader is exercised.
 			headers.add(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, "http://downstream-should-be-stripped.local");
 			headers.add(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, "true");
 			exchange.sendResponseHeaders(200, body.length);
