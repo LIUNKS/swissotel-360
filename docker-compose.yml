@@ -8,6 +8,7 @@ services:
       POSTGRES_DB: ${LOCAL_DB_NAME:-swissotel360}
       POSTGRES_USER: ${LOCAL_DB_USER:-swissotel}
       POSTGRES_PASSWORD: ${LOCAL_DB_PASSWORD:-swissotel_dev_password}
+      TZ: ${TZ:-America/Lima}
     volumes:
       - ./infra/postgres/init-schemas.sql:/docker-entrypoint-initdb.d/01-init-schemas.sql:ro
       - swissotel-pgdata:/var/lib/postgresql/data
@@ -37,6 +38,274 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
+    networks:
+      - swissotel-net
+
+  iam-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_PATH: services/iam-service
+        APP_PORT: 8081
+    container_name: swissotel-iam-service
+    restart: unless-stopped
+    ports:
+      - "${IAM_SERVICE_PORT:-8081}:8081"
+    environment:
+      IAM_SERVICE_PORT: 8081
+      IAM_DB_URL: jdbc:postgresql://postgres:5432/${LOCAL_DB_NAME:-swissotel360}?currentSchema=iam,extensions
+      LOCAL_DB_USER: ${LOCAL_DB_USER:-swissotel}
+      LOCAL_DB_PASSWORD: ${LOCAL_DB_PASSWORD:-swissotel_dev_password}
+      JWT_SECRET: ${JWT_SECRET:-swissotel-360-local-dev-jwt-secret-key-min-32-chars}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      COOKIE_SAME_SITE: ${COOKIE_SAME_SITE:-Lax}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://localhost:3000,http://localhost:8080}
+      OPENAPI_SERVER_URL: ${OPENAPI_SERVER_URL:-http://localhost:8080}
+      JPA_SHOW_SQL: ${JPA_SHOW_SQL:-false}
+      TZ: ${TZ:-America/Lima}
+      JAVA_OPTS: ${SERVICE_JAVA_OPTS:--Xms128m -Xmx384m} -Duser.timezone=${TZ:-America/Lima}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8081/actuator/health | grep -Eq '\"status\"[[:space:]]*:[[:space:]]*\"UP\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+    networks:
+      - swissotel-net
+
+  guests-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_PATH: services/guests-service
+        APP_PORT: 8082
+    container_name: swissotel-guests-service
+    restart: unless-stopped
+    ports:
+      - "${GUESTS_SERVICE_PORT:-8082}:8082"
+    environment:
+      GUESTS_SERVICE_PORT: 8082
+      GUESTS_DB_URL: jdbc:postgresql://postgres:5432/${LOCAL_DB_NAME:-swissotel360}?currentSchema=guests,extensions
+      LOCAL_DB_USER: ${LOCAL_DB_USER:-swissotel}
+      LOCAL_DB_PASSWORD: ${LOCAL_DB_PASSWORD:-swissotel_dev_password}
+      IAM_SERVICE_URL: http://iam-service:8081
+      JWT_SECRET: ${JWT_SECRET:-swissotel-360-local-dev-jwt-secret-key-min-32-chars}
+      OPENAPI_SERVER_URL: ${OPENAPI_SERVER_URL:-http://localhost:8080}
+      JPA_SHOW_SQL: ${JPA_SHOW_SQL:-false}
+      TZ: ${TZ:-America/Lima}
+      JAVA_OPTS: ${SERVICE_JAVA_OPTS:--Xms128m -Xmx384m} -Duser.timezone=${TZ:-America/Lima}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      iam-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8082/actuator/health | grep -Eq '\"status\"[[:space:]]*:[[:space:]]*\"UP\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+    networks:
+      - swissotel-net
+
+  rooms-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_PATH: services/rooms-service
+        APP_PORT: 8083
+    container_name: swissotel-rooms-service
+    restart: unless-stopped
+    ports:
+      - "${ROOMS_SERVICE_PORT:-8083}:8083"
+    environment:
+      ROOMS_SERVICE_PORT: 8083
+      ROOMS_DB_URL: jdbc:postgresql://postgres:5432/${LOCAL_DB_NAME:-swissotel360}?currentSchema=rooms,extensions
+      LOCAL_DB_USER: ${LOCAL_DB_USER:-swissotel}
+      LOCAL_DB_PASSWORD: ${LOCAL_DB_PASSWORD:-swissotel_dev_password}
+      RESERVATIONS_SERVICE_URL: http://reservations-service:8084
+      JWT_SECRET: ${JWT_SECRET:-swissotel-360-local-dev-jwt-secret-key-min-32-chars}
+      OPENAPI_SERVER_URL: ${OPENAPI_SERVER_URL:-http://localhost:8080}
+      JPA_SHOW_SQL: ${JPA_SHOW_SQL:-false}
+      TZ: ${TZ:-America/Lima}
+      JAVA_OPTS: ${SERVICE_JAVA_OPTS:--Xms128m -Xmx384m} -Duser.timezone=${TZ:-America/Lima}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8083/actuator/health | grep -Eq '\"status\"[[:space:]]*:[[:space:]]*\"UP\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+    networks:
+      - swissotel-net
+
+  reservations-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_PATH: services/reservations-service
+        APP_PORT: 8084
+    container_name: swissotel-reservations-service
+    restart: unless-stopped
+    ports:
+      - "${RESERVATIONS_SERVICE_PORT:-8084}:8084"
+    environment:
+      RESERVATIONS_SERVICE_PORT: 8084
+      RESERVATIONS_DB_URL: jdbc:postgresql://postgres:5432/${LOCAL_DB_NAME:-swissotel360}?currentSchema=reservations,extensions
+      LOCAL_DB_USER: ${LOCAL_DB_USER:-swissotel}
+      LOCAL_DB_PASSWORD: ${LOCAL_DB_PASSWORD:-swissotel_dev_password}
+      GUESTS_SERVICE_URL: http://guests-service:8082
+      ROOMS_SERVICE_URL: http://rooms-service:8083
+      JWT_SECRET: ${JWT_SECRET:-swissotel-360-local-dev-jwt-secret-key-min-32-chars}
+      OPENAPI_SERVER_URL: ${OPENAPI_SERVER_URL:-http://localhost:8080}
+      JPA_SHOW_SQL: ${JPA_SHOW_SQL:-false}
+      TZ: ${TZ:-America/Lima}
+      JAVA_OPTS: ${SERVICE_JAVA_OPTS:--Xms128m -Xmx384m} -Duser.timezone=${TZ:-America/Lima}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8084/actuator/health | grep -Eq '\"status\"[[:space:]]*:[[:space:]]*\"UP\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+    networks:
+      - swissotel-net
+
+  operations-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_PATH: services/operations-service
+        APP_PORT: 8085
+    container_name: swissotel-operations-service
+    restart: unless-stopped
+    ports:
+      - "${OPERATIONS_SERVICE_PORT:-8085}:8085"
+    environment:
+      OPERATIONS_SERVICE_PORT: 8085
+      OPERATIONS_DB_URL: jdbc:postgresql://postgres:5432/${LOCAL_DB_NAME:-swissotel360}?currentSchema=operations,extensions
+      LOCAL_DB_USER: ${LOCAL_DB_USER:-swissotel}
+      LOCAL_DB_PASSWORD: ${LOCAL_DB_PASSWORD:-swissotel_dev_password}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-swissotel}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-swissotel_dev_password}
+      RABBITMQ_ENABLED: "true"
+      GUESTS_SERVICE_URL: http://guests-service:8082
+      ROOMS_SERVICE_URL: http://rooms-service:8083
+      RESERVATIONS_SERVICE_URL: http://reservations-service:8084
+      JWT_SECRET: ${JWT_SECRET:-swissotel-360-local-dev-jwt-secret-key-min-32-chars}
+      OPENAPI_SERVER_URL: ${OPENAPI_SERVER_URL:-http://localhost:8080}
+      JPA_SHOW_SQL: ${JPA_SHOW_SQL:-false}
+      TZ: ${TZ:-America/Lima}
+      JAVA_OPTS: ${SERVICE_JAVA_OPTS:--Xms128m -Xmx384m} -Duser.timezone=${TZ:-America/Lima}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8085/actuator/health | grep -Eq '\"status\"[[:space:]]*:[[:space:]]*\"UP\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 35s
+    networks:
+      - swissotel-net
+
+  billing-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_PATH: services/billing-service
+        APP_PORT: 8086
+    container_name: swissotel-billing-service
+    restart: unless-stopped
+    ports:
+      - "${BILLING_SERVICE_PORT:-8086}:8086"
+    environment:
+      BILLING_SERVICE_PORT: 8086
+      BILLING_DB_URL: jdbc:postgresql://postgres:5432/${LOCAL_DB_NAME:-swissotel360}?currentSchema=billing,extensions
+      LOCAL_DB_USER: ${LOCAL_DB_USER:-swissotel}
+      LOCAL_DB_PASSWORD: ${LOCAL_DB_PASSWORD:-swissotel_dev_password}
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: ${RABBITMQ_USER:-swissotel}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-swissotel_dev_password}
+      OPERATIONS_SERVICE_URL: http://operations-service:8085
+      JWT_SECRET: ${JWT_SECRET:-swissotel-360-local-dev-jwt-secret-key-min-32-chars}
+      OPENAPI_SERVER_URL: ${OPENAPI_SERVER_URL:-http://localhost:8080}
+      JPA_SHOW_SQL: ${JPA_SHOW_SQL:-false}
+      TZ: ${TZ:-America/Lima}
+      JAVA_OPTS: ${SERVICE_JAVA_OPTS:--Xms128m -Xmx384m} -Duser.timezone=${TZ:-America/Lima}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8086/actuator/health | grep -Eq '\"status\"[[:space:]]*:[[:space:]]*\"UP\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 35s
+    networks:
+      - swissotel-net
+
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        MODULE_PATH: gateway
+        APP_PORT: 8080
+    container_name: swissotel-api-gateway
+    restart: unless-stopped
+    ports:
+      - "${GATEWAY_PORT:-8080}:8080"
+    environment:
+      GATEWAY_PORT: 8080
+      IAM_SERVICE_URL: http://iam-service:8081
+      GUESTS_SERVICE_URL: http://guests-service:8082
+      ROOMS_SERVICE_URL: http://rooms-service:8083
+      RESERVATIONS_SERVICE_URL: http://reservations-service:8084
+      OPERATIONS_SERVICE_URL: http://operations-service:8085
+      BILLING_SERVICE_URL: http://billing-service:8086
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://localhost:3000,http://localhost:8080}
+      TZ: ${TZ:-America/Lima}
+      JAVA_OPTS: ${GATEWAY_JAVA_OPTS:--Xms96m -Xmx256m} -Duser.timezone=${TZ:-America/Lima}
+    depends_on:
+      iam-service:
+        condition: service_healthy
+      guests-service:
+        condition: service_healthy
+      rooms-service:
+        condition: service_healthy
+      reservations-service:
+        condition: service_healthy
+      operations-service:
+        condition: service_healthy
+      billing-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8080/actuator/health | grep -Eq '\"status\"[[:space:]]*:[[:space:]]*\"UP\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
     networks:
       - swissotel-net
 
