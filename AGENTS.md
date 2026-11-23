@@ -58,6 +58,7 @@ Entry points (Driving Adapters). How the outside world communicates with the dom
    - **Synchronous:** Inject the Facade interface (ACL) of the target domain via an Outbound Service. Never query another domain's repository directly.
    - **Asynchronous:** Publish Integration Events and listen to them via EventHandlers.
 4. **Transformations:** Use stateless "Assembler" classes (static methods) to translate between models (e.g., `Resource` to `Command`, or `JPA Entity` to `Domain Aggregate`).
+5. **Private ID vs Public ID:** All internal backend layers (database columns/FKs, repositories, ACLs/internal `/internal/**` contracts, integration events, and the JWT `uid` claim) use the private database `Long` identifier. All external public REST APIs (`/api/v1/**` paths, query parameters, request payloads, and response `*Resource` DTOs) MUST expose and accept exclusively `UUID publicId` (or the natural `code` for immutable reference catalogs such as `document_types`, `payment_methods`, and `service_types`), never internal `Long` IDs.
 
 ---
 
