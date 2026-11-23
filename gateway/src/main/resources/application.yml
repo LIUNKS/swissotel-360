@@ -9,13 +9,6 @@ spring:
       server:
         webmvc:
           routes:
-            - id: billing-service
-              uri: ${gateway.routes.billing-service-url}
-              predicates:
-                - Path=/api/v1/folios/**,/api/v1/payments/**,/api/v1/payment-methods/**,/api/v1/invoices/**
-              filters:
-                - RemoveResponseHeader=Access-Control-Allow-Origin
-                - RemoveResponseHeader=Access-Control-Allow-Credentials
             - id: iam-service
               uri: ${gateway.routes.iam-service-url}
               predicates:
@@ -51,27 +44,57 @@ spring:
               filters:
                 - RemoveResponseHeader=Access-Control-Allow-Origin
                 - RemoveResponseHeader=Access-Control-Allow-Credentials
+            - id: billing-service
+              uri: ${gateway.routes.billing-service-url}
+              predicates:
+                - Path=/api/v1/folios/**,/api/v1/payments/**,/api/v1/payment-methods/**,/api/v1/invoices/**
+              filters:
+                - RemoveResponseHeader=Access-Control-Allow-Origin
+                - RemoveResponseHeader=Access-Control-Allow-Credentials
+            - id: iam-openapi
+              uri: ${gateway.routes.iam-service-url}
+              predicates:
+                - Path=/v3/api-docs/iam
+              filters:
+                - RewritePath=/v3/api-docs/iam, /v3/api-docs
+            - id: guests-openapi
+              uri: ${gateway.routes.guests-service-url}
+              predicates:
+                - Path=/v3/api-docs/guests
+              filters:
+                - RewritePath=/v3/api-docs/guests, /v3/api-docs
+            - id: rooms-openapi
+              uri: ${gateway.routes.rooms-service-url}
+              predicates:
+                - Path=/v3/api-docs/rooms
+              filters:
+                - RewritePath=/v3/api-docs/rooms, /v3/api-docs
+            - id: reservations-openapi
+              uri: ${gateway.routes.reservations-service-url}
+              predicates:
+                - Path=/v3/api-docs/reservations
+              filters:
+                - RewritePath=/v3/api-docs/reservations, /v3/api-docs
+            - id: operations-openapi
+              uri: ${gateway.routes.operations-service-url}
+              predicates:
+                - Path=/v3/api-docs/operations
+              filters:
+                - RewritePath=/v3/api-docs/operations, /v3/api-docs
             - id: billing-openapi
               uri: ${gateway.routes.billing-service-url}
               predicates:
                 - Path=/v3/api-docs/billing
               filters:
                 - RewritePath=/v3/api-docs/billing, /v3/api-docs
-            - id: monolith-openapi
-              uri: ${gateway.routes.monolith-url}
-              predicates:
-                - Path=/v3/api-docs/monolith
-              filters:
-                - RewritePath=/v3/api-docs/monolith, /v3/api-docs
 
 gateway:
   routes:
-    monolith-url: ${MONOLITH_URL:http://localhost:8081}
-    iam-service-url: ${IAM_SERVICE_URL:${gateway.routes.monolith-url}}
-    guests-service-url: ${GUESTS_SERVICE_URL:${gateway.routes.monolith-url}}
-    rooms-service-url: ${ROOMS_SERVICE_URL:${gateway.routes.monolith-url}}
-    reservations-service-url: ${RESERVATIONS_SERVICE_URL:${gateway.routes.monolith-url}}
-    operations-service-url: ${OPERATIONS_SERVICE_URL:${gateway.routes.monolith-url}}
+    iam-service-url: ${IAM_SERVICE_URL:http://localhost:8081}
+    guests-service-url: ${GUESTS_SERVICE_URL:http://localhost:8082}
+    rooms-service-url: ${ROOMS_SERVICE_URL:http://localhost:8083}
+    reservations-service-url: ${RESERVATIONS_SERVICE_URL:http://localhost:8084}
+    operations-service-url: ${OPERATIONS_SERVICE_URL:http://localhost:8085}
     billing-service-url: ${BILLING_SERVICE_URL:http://localhost:8086}
 
 springdoc:
@@ -79,8 +102,16 @@ springdoc:
     path: /swagger-ui.html
     disable-swagger-default-url: true
     urls:
-      - name: Monolith (IAM, Guests, Rooms, Reservations, Operations)
-        url: /v3/api-docs/monolith
+      - name: IAM Service
+        url: /v3/api-docs/iam
+      - name: Guests Service
+        url: /v3/api-docs/guests
+      - name: Rooms Service
+        url: /v3/api-docs/rooms
+      - name: Reservations Service
+        url: /v3/api-docs/reservations
+      - name: Operations Service
+        url: /v3/api-docs/operations
       - name: Billing Service
         url: /v3/api-docs/billing
 

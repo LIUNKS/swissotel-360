@@ -21,8 +21,12 @@
         <module>libs/shared-kernel</module>
         <module>libs/shared-security</module>
         <module>gateway</module>
+        <module>services/iam-service</module>
+        <module>services/guests-service</module>
+        <module>services/rooms-service</module>
+        <module>services/reservations-service</module>
+        <module>services/operations-service</module>
         <module>services/billing-service</module>
-        <module>monolith</module>
     </modules>
 
     <properties>
