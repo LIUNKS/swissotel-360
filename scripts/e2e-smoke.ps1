@@ -84,19 +84,25 @@ function Invoke-Api {
     }
     if ($null -ne $Body) {
         $params.ContentType = "application/json; charset=utf-8"
-        $params.Body = if ($Body -is [string]) { $Body } else { ($Body | ConvertTo-Json -Depth 10 -Compress) }
+        $jsonBody = if ($Body -is [string]) { $Body } else { ($Body | ConvertTo-Json -Depth 10 -Compress) }
+        $params.Body = [System.Text.Encoding]::UTF8.GetBytes($jsonBody)
     }
 
     try {
         $resp = Invoke-WebRequest @params
+        $raw = if ($resp.Content -is [byte[]]) {
+            [System.Text.Encoding]::UTF8.GetString($resp.Content)
+        } else {
+            [string]$resp.Content
+        }
         $json = $null
-        if (-not [string]::IsNullOrWhiteSpace($resp.Content)) {
-            $json = $resp.Content | ConvertFrom-Json
+        if (-not [string]::IsNullOrWhiteSpace($raw)) {
+            $json = $raw | ConvertFrom-Json
         }
         return [pscustomobject]@{
             StatusCode = [int]$resp.StatusCode
             Headers    = $resp.Headers
-            RawBody    = $resp.Content
+            RawBody    = $raw
             Json       = $json
         }
     }
@@ -195,7 +201,7 @@ Write-Step "5/15 Fetching document types catalog"
 $docTypes = Invoke-Api -Method "GET" -Path "/api/v1/document-types" -Headers $authHeaders
 Assert-Condition ($docTypes.StatusCode -eq 200) "Expected 200 on /document-types, got $($docTypes.StatusCode): $($docTypes.RawBody)"
 Assert-NoRawIdFields $docTypes.Json
-Assert-Condition (($docTypes.Json | Where-Object { $_.code -eq "DNI" }).Count -ge 1) "Expected DNI in document-types catalog"
+Assert-Condition (@($docTypes.Json | Where-Object { $_.code -eq "DNI" }).Count -ge 1) "Expected DNI in document-types catalog"
 
 # 6. Create guest
 $dni = [string](Get-Random -Minimum 10000000 -Maximum 99999999)
@@ -303,7 +309,7 @@ for ($attempt = 1; $attempt -le $AsyncTimeoutSeconds; $attempt++) {
     $sumResp = Invoke-Api -Method "GET" -Path "/api/v1/folios/$folioId/summary" -Headers $authHeaders
     Assert-Condition ($sumResp.StatusCode -eq 200) "Expected 200 on folio summary, got $($sumResp.StatusCode): $($sumResp.RawBody)"
     Assert-NoRawIdFields $sumResp.Json
-    if ($sumResp.Json.charges.Count -ge 1 -and [decimal]$sumResp.Json.totalAmount -ge 45.00) {
+    if (@($sumResp.Json.charges).Count -ge 1 -and [decimal]$sumResp.Json.totalAmount -ge 45.00) {
         $summary = $sumResp.Json
         break
     }
